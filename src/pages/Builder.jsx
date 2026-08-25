@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { 
   Plus, Settings, Code, Trash2, Copy, Check, Palette, List, Link,
   ChevronDown, ChevronUp, Monitor, Smartphone, Sparkles, Type, FileText, CheckSquare, Mail, Hash,
-  Database, HelpCircle, ChevronRight, ChevronLeft, Terminal, AlertTriangle, Calendar, ArrowLeft
+  Database, HelpCircle, ChevronRight, ChevronLeft, Terminal, AlertTriangle, Calendar, ArrowLeft, CircleDot
 } from 'lucide-react';
 
 const PRESET_THEMES = {
@@ -849,6 +849,8 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                       case 'checkbox': return <CheckSquare size={16} style={{ color: '#818cf8' }} />;
                       case 'textarea': return <FileText size={16} style={{ color: '#818cf8' }} />;
                       case 'date': return <Calendar size={16} style={{ color: '#818cf8' }} />;
+                      case 'select': return <List size={16} style={{ color: '#818cf8' }} />;
+                      case 'radio': return <CircleDot size={16} style={{ color: '#818cf8' }} />;
                       default: return <Type size={16} style={{ color: '#818cf8' }} />;
                     }
                   };
@@ -941,8 +943,58 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                             <option value="date">Data</option>
                             <option value="checkbox">Checkbox</option>
                             <option value="textarea">Texto Longo</option>
+                            <option value="select">Lista (Dropdown)</option>
+                            <option value="radio">Múltipla Escolha (Radio)</option>
                           </select>
                         </div>
+                        
+                        {(field.type === 'select' || field.type === 'radio') && (
+                          <div style={{ padding: 12, background: 'rgba(0,0,0,0.03)', borderRadius: 6, border: '1px solid var(--border-builder)' }}>
+                            <label className="input-label" style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              Opções de Escolha
+                              <button 
+                                type="button" 
+                                className="icon-btn" 
+                                style={{ width: 'auto', padding: '4px 8px', fontSize: 11 }}
+                                onClick={() => {
+                                  const currentOptions = field.options || ['Opção 1'];
+                                  updateField(field.id, 'options', [...currentOptions, `Opção ${currentOptions.length + 1}`]);
+                                }}
+                              >
+                                <Plus size={12} /> Adicionar Opção
+                              </button>
+                            </label>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                              {(field.options || ['Opção 1']).map((opt, optIndex) => (
+                                <div key={optIndex} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                  <input 
+                                    type="text" 
+                                    className="input" 
+                                    style={{ padding: '6px 10px', fontSize: 13, height: 'auto', marginBottom: 0 }}
+                                    value={opt} 
+                                    onChange={(e) => {
+                                      const newOpts = [...(field.options || ['Opção 1'])];
+                                      newOpts[optIndex] = e.target.value;
+                                      updateField(field.id, 'options', newOpts);
+                                    }} 
+                                  />
+                                  <button 
+                                    type="button" 
+                                    className="icon-btn danger" 
+                                    style={{ padding: 6, height: 'auto' }}
+                                    title="Remover opção"
+                                    onClick={() => {
+                                      const newOpts = (field.options || ['Opção 1']).filter((_, idx) => idx !== optIndex);
+                                      updateField(field.id, 'options', newOpts.length ? newOpts : ['Opção 1']);
+                                    }}
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                       
                       <div className="field-card-footer">

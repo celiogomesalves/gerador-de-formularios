@@ -466,6 +466,46 @@ export default function PublicForm() {
                         {field.placeholder || 'Aceito os termos'}
                       </label>
                     </div>
+                  ) : field.type === 'select' ? (
+                    <select
+                      name={field.key}
+                      required={field.required}
+                      className="public-form-input"
+                      style={{
+                        backgroundColor: config.design.mode === 'dark' ? 'rgba(0, 0, 0, 0.25)' : '#ffffff',
+                        color: config.design.mode === 'dark' ? '#f8fafc' : '#0f172a',
+                        borderColor: config.design.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0',
+                        borderRadius: `${config.design.borderRadius}px`,
+                        '--focus-ring-color': config.design.themeColor
+                      }}
+                    >
+                      <option value="">{field.placeholder || 'Selecione uma opção'}</option>
+                      {(field.options || ['Opção 1']).map((opt, i) => (
+                        <option key={i} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  ) : field.type === 'radio' ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+                      {(field.options || ['Opção 1']).map((opt, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <input 
+                            type="radio" 
+                            name={field.key} 
+                            id={`${field.id}_${i}`}
+                            value={opt}
+                            required={field.required}
+                            style={{ width: 16, height: 16, accentColor: config.design.themeColor }}
+                          />
+                          <label 
+                            htmlFor={`${field.id}_${i}`}
+                            className="public-form-radio-label"
+                            style={{ color: config.design.mode === 'dark' ? '#9ca3af' : '#64748b', cursor: 'pointer' }}
+                          >
+                            {opt}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
                     <input
                       type={field.type}

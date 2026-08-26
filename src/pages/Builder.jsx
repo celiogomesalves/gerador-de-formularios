@@ -71,7 +71,8 @@ const PRESET_THEMES = {
 
 import { useParams, useNavigate } from 'react-router-dom';
 
-export default function Builder() {
+import { getFormFromDrive, saveFormToDrive } from '../lib/googleDrive';
+export default function Builder({ session }) {
   const { token: formToken } = useParams();
   const navigate = useNavigate();
   
@@ -106,6 +107,10 @@ export default function Builder() {
   const [sqlCopied, setSqlCopied] = useState(false);
   const [appsScriptCopied, setAppsScriptCopied] = useState(false);
 
+  const [isLoadingDrive, setIsLoadingDrive] = useState(true);
+  const [driveFolderId, setDriveFolderId] = useState(localStorage.getItem('google_folder_id') || null);
+  const googleToken = session?.access_token;
+  
   const [fields, setFields] = useState(() => {
     const stored = localStorage.getItem(`form_${formToken}`);
     if (stored) {
@@ -216,6 +221,26 @@ export default function Builder() {
     };
   }
 
+  useEffect(() => {
+    const loadFromDrive = async () => {
+      if (!formToken || formToken.startsWith('new_')) {
+        setIsLoadingDrive(false);
+        return;
+      }
+      try {
+        const data = await getFormFromDrive(googleToken, formToken);
+        if (data.fields) setFields(data.fields);
+        if (data.design) setDesign({ ...defaultDesignState(), ...data.design });
+        if (data.settings) setSettings({ ...defaultSettingsState(), ...data.settings });
+      } catch (err) {
+        console.error("Failed to load from drive", err);
+      } finally {
+        setIsLoadingDrive(false);
+      }
+    };
+    if (googleToken) loadFromDrive();
+  }, [formToken, googleToken]);
+
   const [copied, setCopied] = useState(false);
   const [embedHideHeader, setEmbedHideHeader] = useState(false);
   const [embedTransparent, setEmbedTransparent] = useState(false);
@@ -279,58 +304,44 @@ export default function Builder() {
   const saveConfigToLocal = async () => {
     const configData = { fields, design, settings };
     localStorage.setItem(`form_${formToken}`, JSON.stringify(configData));
-
-    // Real Supabase Cloud Save
-    if (settings.storageType === 'supabase' && settings.storageSupabaseUrl && settings.storageSupabaseAnonKey) {
-      try {
-        const queryUrl = `${settings.storageSupabaseUrl}/rest/v1/forms?token=eq.${formToken}&select=id`;
-        const queryRes = await fetch(queryUrl, {
-          headers: {
-            'apikey': settings.storageSupabaseAnonKey,
-            'Authorization': `Bearer ${settings.storageSupabaseAnonKey}`
-          }
-        });
-        
-        const bodyStr = JSON.stringify({
-          token: formToken,
-          fields: fields,
-          design: design,
-          settings: settings
-        });
-
-        if (queryRes.ok) {
-          const data = await queryRes.json();
-          if (data && data.length > 0) {
-            // EXISTS: PATCH
-            await fetch(`${settings.storageSupabaseUrl}/rest/v1/forms?token=eq.${formToken}`, {
-              method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json',
-                'apikey': settings.storageSupabaseAnonKey,
-                'Authorization': `Bearer ${settings.storageSupabaseAnonKey}`,
-                'Prefer': 'return=minimal'
-              },
-              body: bodyStr
-            });
-          } else {
-            // NOT EXISTS: POST
-            await fetch(`${settings.storageSupabaseUrl}/rest/v1/forms`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'apikey': settings.storageSupabaseAnonKey,
-                'Authorization': `Bearer ${settings.storageSupabaseAnonKey}`,
-                'Prefer': 'return=minimal'
-              },
-              body: bodyStr
-            });
-          }
-        }
-      } catch (e) {
-        console.error('Erro ao sincronizar com Supabase Cloud', e);
-      }
-    }
   };
+  
+  // Debounced Drive Save
+  useEffect(() => {
+    if (isLoadingDrive || !googleToken) return;
+    
+    const timer = setTimeout(async () => {
+      try {
+        const configData = { fields, design, settings };
+        const isNew = formToken.startsWith('new_');
+        let folderId = driveFolderId;
+        
+        if (!folderId) {
+           const { getOrCreateFolder } = await import('../lib/googleDrive');
+           folderId = await getOrCreateFolder(googleToken);
+           setDriveFolderId(folderId);
+           localStorage.setItem('google_folder_id', folderId);
+        }
+        
+        const fileId = await saveFormToDrive(
+           googleToken, 
+           folderId, 
+           design.titleText || 'Formulário Sem Título', 
+           configData, 
+           isNew ? null : formToken
+        );
+        
+        if (isNew && fileId) {
+           navigate(`/builder/${fileId}`, { replace: true });
+        }
+      } catch (err) {
+        console.error("Auto-save to drive failed", err);
+      }
+    }, 2000); // 2 second debounce
+    
+    return () => clearTimeout(timer);
+  }, [fields, design, settings, isLoadingDrive, googleToken]);
+
 
   useEffect(() => {
     saveConfigToLocal();
@@ -1145,11 +1156,11 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                           </div>
                         </div>
                         
-                        <div>
-                          <label className="input-label">Logomarca (Imagem do Dispositivo ou URL)</label>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                              <label className="btn btn-outline" style={{ cursor: 'pointer', margin: 0, fontSize: 12, padding: '10px' }}>
+                        <div style={{ padding: '15px', border: '1px solid #ddd', borderRadius: '8px', marginBottom: '16px', background: '#f9f9f9' }}>
+                          <label className="input-label" style={{ fontWeight: 'bold', marginBottom: '10px', display: 'block' }}>Logomarca (Imagem do Dispositivo ou URL)</label>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                              <label className="btn btn-outline" style={{ cursor: 'pointer', margin: 0, padding: '10px 15px', fontSize: '13px', background: 'white' }}>
                                 📁 Escolher Imagem do Dispositivo
                                 <input 
                                   type="file" 
@@ -1163,7 +1174,7 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                                 <button 
                                   type="button" 
                                   className="btn btn-outline danger" 
-                                  style={{ width: 'auto', padding: '10px', fontSize: 12, borderColor: 'var(--danger-color)', color: 'var(--danger-color)' }}
+                                  style={{ padding: '10px 15px', fontSize: '13px', borderColor: 'var(--danger-color)', color: 'var(--danger-color)', background: 'white' }}
                                   onClick={() => setDesign({...design, logoUrl: ''})}
                                 >
                                   Remover Logo
@@ -1171,23 +1182,24 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                               )}
                             </div>
                             
-                            <div style={{ display: 'flex', gap: 8 }}>
+                            <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
                               <input 
                                 type="text" 
                                 className="input" 
                                 placeholder="Ou cole a URL direta: https://sua-logo.png" 
-                                value={design.logoUrl.startsWith('data:image') ? 'Imagem Carregada Localmente' : design.logoUrl} 
+                                value={design.logoUrl?.startsWith?.('data:image') ? 'Imagem Carregada Localmente' : (design.logoUrl || '')} 
                                 onChange={(e) => setDesign({...design, logoUrl: e.target.value})} 
-                                disabled={design.logoUrl.startsWith('data:image')}
+                                disabled={design.logoUrl?.startsWith?.('data:image')}
+                                style={{ flex: 1, padding: '10px', border: '1px solid #ccc', borderRadius: '6px' }}
                               />
                               {!design.logoUrl && (
                                 <button 
                                   type="button" 
                                   className="btn btn-outline" 
-                                  style={{ width: 'auto', padding: '0 12px', fontSize: 11, whiteSpace: 'nowrap' }}
+                                  style={{ padding: '0 15px', fontSize: '12px', whiteSpace: 'nowrap', background: 'white' }}
                                   onClick={() => setDesign({...design, logoUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120&auto=format&fit=crop&q=60'})}
                                 >
-                                  Logo Demo
+                                  Usar Logo Demo
                                 </button>
                               )}
                             </div>

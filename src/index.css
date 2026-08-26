@@ -116,7 +116,6 @@ body {
   border: 1px solid var(--border-builder);
   border-radius: var(--radius-md);
   margin-bottom: 12px;
-  overflow: hidden;
   background: #ffffff;
   transition: var(--transition);
 }

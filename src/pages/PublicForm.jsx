@@ -255,7 +255,50 @@ export default function PublicForm() {
     setSubmitting(true);
     
     const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
+    const data = {};
+    
+    // Capturar parâmetros de URL (Query Strings)
+    const urlParams = new URLSearchParams(window.location.search);
+    for (const [key, value] of urlParams.entries()) {
+      data[key] = value;
+    }
+
+    // Inicializar todos os campos definidos no construtor para garantir que a chave exista no webhook (útil para n8n/zapier)
+    if (config && config.fields) {
+      config.fields.forEach(field => {
+        const payloadKey = field.label || field.key;
+        if (field.type === 'checkbox') {
+          data[payloadKey] = false; // Checkbox único inicia falso
+        } else {
+          data[payloadKey] = ''; // Outros iniciam vazios
+        }
+      });
+    }
+
+    const seenGroupKeys = new Set();
+
+    for (let [key, value] of formData.entries()) {
+      const fieldConfig = config.fields?.find(f => f.key === key);
+      const payloadKey = fieldConfig && fieldConfig.label ? fieldConfig.label : key;
+      
+      if (fieldConfig && fieldConfig.type === 'checkbox') {
+        data[payloadKey] = true; // Se está no FormData, foi marcado
+      } else if (fieldConfig && fieldConfig.type === 'checkbox_group') {
+        if (!seenGroupKeys.has(payloadKey)) {
+          data[payloadKey] = value;
+          seenGroupKeys.add(payloadKey);
+        } else {
+          data[payloadKey] = data[payloadKey] + ", " + value;
+        }
+      } else {
+        // Se a chave já tiver um valor diferente de string vazia (ex: campos duplicados com mesmo key), concatena
+        if (data[payloadKey] && data[payloadKey] !== '') {
+          data[payloadKey] = data[payloadKey] + ", " + value;
+        } else {
+          data[payloadKey] = value;
+        }
+      }
+    }
     
     console.log('Dados submetidos:', data);
 
@@ -381,21 +424,23 @@ export default function PublicForm() {
             <p style={{ color: getHeaderTextColor(), opacity: 0.6, fontSize: 14, marginBottom: 24 }}>
               Sua resposta foi registrada e enviada com sucesso.
             </p>
-            <button 
-              onClick={() => setSuccess(false)}
-              className="public-form-btn"
-              style={{
-                background: 'transparent',
-                color: config.design.themeColor,
-                border: `1px solid ${config.design.themeColor}`,
-                display: 'inline-flex',
-                width: 'auto',
-                padding: '10px 24px',
-                borderRadius: `${config.design.borderRadius}px`
-              }}
-            >
-              Enviar outra resposta
-            </button>
+            {config.settings.allowAnotherResponse !== false && (
+              <button 
+                onClick={() => setSuccess(false)}
+                className="public-form-btn"
+                style={{
+                  background: 'transparent',
+                  color: config.design.themeColor,
+                  border: `1px solid ${config.design.themeColor}`,
+                  display: 'inline-flex',
+                  width: 'auto',
+                  padding: '10px 24px',
+                  borderRadius: `${config.design.borderRadius}px`
+                }}
+              >
+                Enviar outra resposta
+              </button>
+            )}
           </div>
         ) : (
           <>
@@ -479,7 +524,7 @@ export default function PublicForm() {
                         '--focus-ring-color': config.design.themeColor
                       }}
                     >
-                      <option value="">{field.placeholder || 'Selecione uma opção'}</option>
+                      <option value="">Escolha uma opção</option>
                       {(field.options || ['Opção 1']).map((opt, i) => (
                         <option key={i} value={opt}>{opt}</option>
                       ))}
@@ -494,6 +539,27 @@ export default function PublicForm() {
                             id={`${field.id}_${i}`}
                             value={opt}
                             required={field.required}
+                            style={{ width: 16, height: 16, accentColor: config.design.themeColor }}
+                          />
+                          <label 
+                            htmlFor={`${field.id}_${i}`}
+                            className="public-form-radio-label"
+                            style={{ color: config.design.mode === 'dark' ? '#9ca3af' : '#64748b', cursor: 'pointer' }}
+                          >
+                            {opt}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  ) : field.type === 'checkbox_group' ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+                      {(field.options || ['Opção 1']).map((opt, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <input 
+                            type="checkbox" 
+                            name={field.key} 
+                            id={`${field.id}_${i}`}
+                            value={opt}
                             style={{ width: 16, height: 16, accentColor: config.design.themeColor }}
                           />
                           <label 

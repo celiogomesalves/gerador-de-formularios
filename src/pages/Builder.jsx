@@ -75,12 +75,28 @@ export default function Builder() {
   const { token: formToken } = useParams();
   const navigate = useNavigate();
   
+  const [expandedFields, setExpandedFields] = useState({});
+  const toggleField = (id) => {
+    setExpandedFields(prev => ({ ...prev, [id]: prev[id] === undefined ? false : !prev[id] }));
+  };
+  
+  const collapseAllFields = () => {
+    const newState = {};
+    fields.forEach(f => newState[f.id] = false);
+    setExpandedFields(newState);
+  };
+  
+  const expandAllFields = () => {
+    setExpandedFields({});
+  };
+  
   const [activeTab, setActiveTab] = useState('fields'); // fields, design, settings
   const [openSection, setOpenSection] = useState(''); // header, background, elements, typography
   const [viewportMode, setViewportMode] = useState('desktop'); // desktop, mobile
 
   // Sub-tabs for Settings
   const [settingsTab, setSettingsTab] = useState('destination'); // destination, storage
+  const [tokenCopied, setTokenCopied] = useState(false);
 
   // Storage Wizard states
   const [wizardStep, setWizardStep] = useState(1);
@@ -354,6 +370,27 @@ export default function Builder() {
     (async () => {
       await addLog('🔍 Iniciando teste de conexão...', 300);
       
+      const testData = {
+        _isTest: true, // Renomeado para não ser ignorado pelo Apps Script e forçar a criação das colunas
+        _testMessage: "Teste de conexão enviado pelo construtor FormGen Studio",
+        timestamp: new Date().toISOString(),
+        formToken: formToken,
+        fieldsCount: fields.length
+      };
+      
+      fields.forEach(f => {
+        let mockVal = "Dado de teste";
+        if (f.type === 'email') mockVal = "teste@email.com";
+        else if (f.type === 'number') mockVal = "123";
+        else if (f.type === 'checkbox') mockVal = "Aceito";
+        else if (f.type === 'date') mockVal = new Date().toISOString().split('T')[0];
+        else if (f.type === 'select' || f.type === 'radio') mockVal = (f.options && f.options.length > 0) ? f.options[0] : "Opção 1";
+        
+        const payloadKey = f.label || f.key;
+        testData[payloadKey] = mockVal;
+      });
+
+      
       if (type === 'sheets') {
         await addLog('🌐 Validando URL do Google Apps Script...', 500);
         if (!settings.sheetsUrl || !settings.sheetsUrl.startsWith('http')) {
@@ -364,13 +401,7 @@ export default function Builder() {
         }
         await addLog('✉️ Enviando payload HTTP POST real para o Google Sheets (via proxy)...', 500);
         try {
-          const testData = {
-            test: true,
-            message: "Teste de conexao enviado pelo construtor FormGen Studio",
-            timestamp: new Date().toISOString(),
-            formToken: formToken
-          };
-          
+
           const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
           const proxyUrl = isLocalhost ? 'https://vibeform-studio.vercel.app/api/proxy' : '/api/proxy';
 
@@ -410,14 +441,7 @@ export default function Builder() {
         }
         await addLog('✉️ Enviando payload HTTP POST real para o Webhook (via proxy)...', 500);
         try {
-          const testData = {
-            test: true,
-            message: "Teste de conexao enviado pelo construtor FormGen Studio",
-            timestamp: new Date().toISOString(),
-            formToken: formToken,
-            fieldsCount: fields.length
-          };
-          
+
           const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
           const proxyUrl = isLocalhost ? 'https://vibeform-studio.vercel.app/api/proxy' : '/api/proxy';
 
@@ -509,7 +533,7 @@ export default function Builder() {
             },
             body: JSON.stringify({
               form_token: formToken,
-              data: { test: true, message: "Teste de conexão do VibeForm Studio" }
+              data: testData
             })
           });
 
@@ -833,12 +857,23 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
         <div className="editor-canvas">
           {activeTab === 'fields' && (
             <>
-              <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <h1><List size={22} style={{ color: 'var(--accent-color)' }} /> Campos do Formulário</h1>
                 <button className="btn btn-primary" style={{ width: 'auto', padding: '8px 16px' }} onClick={addField}>
                   <Plus size={16} /> Adicionar Campo
                 </button>
               </div>
+
+              {fields.length > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginBottom: 12 }}>
+                  <button type="button" onClick={expandAllFields} style={{ background: 'transparent', border: 'none', color: 'var(--accent-color)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <ChevronDown size={14} /> Expandir todos
+                  </button>
+                  <button type="button" onClick={collapseAllFields} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <ChevronUp size={14} /> Recolher todos
+                  </button>
+                </div>
+              )}
 
               <div className="fields-list">
                 {fields.map((field, index) => {
@@ -850,6 +885,7 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                       case 'textarea': return <FileText size={16} style={{ color: '#818cf8' }} />;
                       case 'date': return <Calendar size={16} style={{ color: '#818cf8' }} />;
                       case 'select': return <List size={16} style={{ color: '#818cf8' }} />;
+                      case 'checkbox_group':
                       case 'radio': return <CircleDot size={16} style={{ color: '#818cf8' }} />;
                       default: return <Type size={16} style={{ color: '#818cf8' }} />;
                     }
@@ -857,12 +893,26 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
 
                   return (
                     <div className="field-card" key={field.id}>
-                      <div className="field-card-header">
-                        <span className="field-card-title">
-                          {getFieldIcon(field.type)}
-                          Campo #{index + 1} ({field.key})
-                        </span>
-                        <div style={{ display: 'flex', gap: 6 }}>
+                      <div 
+                        className="field-card-header" 
+                        onClick={() => toggleField(field.id)} 
+                        style={{ cursor: 'pointer', userSelect: 'none' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                          <div style={{ marginTop: 2, display: 'flex' }}>
+                            {expandedFields[field.id] !== false ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <span className="field-card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {getFieldIcon(field.type)}
+                              Campo #{index + 1} ({field.key})
+                            </span>
+                            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 'normal' }}>
+                              {field.label || 'Sem título'}
+                            </span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
                           <button 
                             className="icon-btn" 
                             title="Mover para Cima" 
@@ -899,7 +949,9 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                         </div>
                       </div>
                       
-                      <div className="field-card-body">
+                      {expandedFields[field.id] !== false && (
+                        <>
+                          <div className="field-card-body">
                         <div>
                           <label className="input-label">Título do Campo (Label)</label>
                           <input 
@@ -920,15 +972,17 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                           />
                         </div>
                         
-                        <div>
-                          <label className="input-label">Texto de Apoio (Placeholder)</label>
-                          <input 
-                            type="text" 
-                            className="input" 
-                            value={field.placeholder} 
-                            onChange={(e) => updateField(field.id, 'placeholder', e.target.value)} 
-                          />
-                        </div>
+                        {field.type !== 'select' && field.type !== 'radio' && field.type !== 'checkbox_group' && (
+                          <div>
+                            <label className="input-label">Texto de Apoio (Placeholder)</label>
+                            <input 
+                              type="text" 
+                              className="input" 
+                              value={field.placeholder} 
+                              onChange={(e) => updateField(field.id, 'placeholder', e.target.value)} 
+                            />
+                          </div>
+                        )}
                         
                         <div>
                           <label className="input-label">Tipo de Campo</label>
@@ -941,14 +995,15 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                             <option value="email">E-mail</option>
                             <option value="number">Número</option>
                             <option value="date">Data</option>
-                            <option value="checkbox">Checkbox</option>
+                            <option value="checkbox">Checkbox Único (Aceite)</option>
                             <option value="textarea">Texto Longo</option>
                             <option value="select">Lista (Dropdown)</option>
-                            <option value="radio">Múltipla Escolha (Radio)</option>
+                            <option value="radio">Escolha Única (Radio)</option>
+                            <option value="checkbox_group">Múltipla Escolha (Checkboxes)</option>
                           </select>
                         </div>
                         
-                        {(field.type === 'select' || field.type === 'radio') && (
+                        {(field.type === 'select' || field.type === 'radio' || field.type === 'checkbox_group') && (
                           <div style={{ padding: 12, background: 'rgba(0,0,0,0.03)', borderRadius: 6, border: '1px solid var(--border-builder)' }}>
                             <label className="input-label" style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               Opções de Escolha
@@ -1010,6 +1065,8 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                           </label>
                         </div>
                       </div>
+                        </>
+                      )}
                     </div>
                   );
                 })}
@@ -1159,7 +1216,7 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                               <input 
                                 type="range" 
                                 min="30" 
-                                max="180" 
+                                max="350" 
                                 value={!isNaN(parseInt(design.logoSize)) ? design.logoSize : (design.logoSize === 'large' ? 90 : design.logoSize === 'small' ? 40 : 60)}
                                 onChange={(e) => setDesign({...design, logoSize: parseInt(e.target.value)})}
                                 style={{ width: '100%', accentColor: 'var(--accent-color)' }}
@@ -1509,7 +1566,22 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
 
               {settingsTab === 'destination' ? (
                 <div>
-                  <h1 style={{ marginBottom: 12 }}><Settings size={22} style={{ color: 'var(--accent-color)' }} /> Destino das Respostas</h1>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <h1 style={{ marginBottom: 0 }}><Settings size={22} style={{ color: 'var(--accent-color)' }} /> Destino das Respostas</h1>
+                    <button 
+                      type="button"
+                      className="btn btn-outline" 
+                      style={{ padding: '6px 12px', fontSize: 12, height: 'auto', width: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
+                      onClick={() => {
+                        navigator.clipboard.writeText(formToken);
+                        setTokenCopied(true);
+                        setTimeout(() => setTokenCopied(false), 2000);
+                      }}
+                    >
+                      {tokenCopied ? <Check size={14} style={{ color: '#10b981' }} /> : <Copy size={14} />}
+                      {tokenCopied ? 'Copiado!' : `Copiar Token: ${formToken}`}
+                    </button>
+                  </div>
                   <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>
                     Selecione para onde as respostas do formulário preenchidas pelos usuários devem ser enviadas.
                   </p>
@@ -1830,6 +1902,17 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
                       value={settings.successMessage} 
                       onChange={(e) => setSettings({...settings, successMessage: e.target.value})} 
                     />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16 }}>
+                      <span className="input-label" style={{ marginBottom: 0 }}>Exibir botão "Enviar outra resposta" após finalizar</span>
+                      <label className="switch">
+                        <input 
+                          type="checkbox" 
+                          checked={settings.allowAnotherResponse !== false}
+                          onChange={(e) => setSettings({...settings, allowAnotherResponse: e.target.checked})}
+                        />
+                        <span className="slider"></span>
+                      </label>
+                    </div>
                   </div>
 
                   {/* Connection Test Actions */}
@@ -2089,7 +2172,7 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
               </div>
             </div>
             
-            <div className="device-body" style={{ ...getBackgroundStyle(), padding: '40px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="device-body" style={{ ...getBackgroundStyle(), padding: '40px 24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
               
               {/* Form Render Mockup */}
               <div style={getCardStyle()}>
@@ -2154,6 +2237,50 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
                           <span className="public-form-checkbox-label" style={{ color: design.mode === 'dark' ? '#9ca3af' : '#64748b' }}>
                             {field.placeholder || 'Sim'}
                           </span>
+                        </div>
+                      ) : field.type === 'select' ? (
+                        <select
+                          disabled
+                          className="public-form-input"
+                          style={{
+                            backgroundColor: design.mode === 'dark' ? 'rgba(0, 0, 0, 0.25)' : '#ffffff',
+                            color: design.mode === 'dark' ? '#f8fafc' : '#0f172a',
+                            borderColor: design.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0',
+                            borderRadius: `${design.borderRadius}px`,
+                            '--focus-ring-color': design.themeColor
+                          }}
+                        >
+                          <option value="">Escolha uma opção</option>
+                          {(field.options || ['Opção 1']).map((opt, i) => (
+                            <option key={i} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : field.type === 'radio' ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                          {(field.options || ['Opção 1']).map((opt, i) => (
+                            <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'not-allowed', color: design.mode === 'dark' ? '#cbd5e1' : '#475569', fontSize: '15px' }}>
+                              <input 
+                                type="radio" 
+                                disabled
+                                name={`preview_${field.id}`}
+                                style={{ accentColor: design.themeColor, width: 16, height: 16, marginTop: 0 }}
+                              />
+                              {opt}
+                            </label>
+                          ))}
+                        </div>
+                      ) : field.type === 'checkbox_group' ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                          {(field.options || ['Opção 1']).map((opt, i) => (
+                            <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'not-allowed', color: design.mode === 'dark' ? '#cbd5e1' : '#475569', fontSize: '15px' }}>
+                              <input 
+                                type="checkbox" 
+                                disabled
+                                style={{ accentColor: design.themeColor, width: 16, height: 16, marginTop: 0 }}
+                              />
+                              {opt}
+                            </label>
+                          ))}
                         </div>
                       ) : (
                         <input

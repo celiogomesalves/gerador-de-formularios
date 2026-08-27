@@ -208,23 +208,23 @@ export default function PublicForm() {
       styles.backdropFilter = 'blur(16px)';
       styles.WebkitBackdropFilter = 'blur(16px)';
       if (isDark) {
-        styles.backgroundColor = 'rgba(15, 23, 42, 0.65)';
+        styles.backgroundColor = designObj.cardBgColor ? designObj.cardBgColor : 'rgba(15, 23, 42, 0.65)';
         styles.borderColor = 'rgba(255, 255, 255, 0.08)';
-        styles.color = '#f8fafc';
+        styles.color = designObj.headerTextColor ? designObj.headerTextColor : '#f8fafc';
       } else {
-        styles.backgroundColor = 'rgba(255, 255, 255, 0.7)';
+        styles.backgroundColor = designObj.cardBgColor ? designObj.cardBgColor : 'rgba(255, 255, 255, 0.7)';
         styles.borderColor = 'rgba(0, 0, 0, 0.06)';
-        styles.color = '#0f172a';
+        styles.color = designObj.headerTextColor ? designObj.headerTextColor : '#0f172a';
       }
     } else {
       if (isDark) {
-        styles.backgroundColor = '#1e293b';
+        styles.backgroundColor = designObj.cardBgColor ? designObj.cardBgColor : '#1e293b';
         styles.borderColor = '#334155';
-        styles.color = '#f8fafc';
+        styles.color = designObj.headerTextColor ? designObj.headerTextColor : '#f8fafc';
       } else {
-        styles.backgroundColor = '#ffffff';
+        styles.backgroundColor = designObj.cardBgColor ? designObj.cardBgColor : '#ffffff';
         styles.borderColor = '#e2e8f0';
-        styles.color = '#0f172a';
+        styles.color = designObj.headerTextColor ? designObj.headerTextColor : '#0f172a';
       }
     }
 

@@ -18,12 +18,18 @@ function App() {
   useEffect(() => {
     const savedToken = localStorage.getItem('google_access_token');
     const expiry = localStorage.getItem('google_token_expiry');
+    const savedProfile = localStorage.getItem('google_user_profile');
     
     if (savedToken && expiry && Date.now() < parseInt(expiry)) {
-      setSession({ access_token: savedToken });
+      let user = null;
+      try {
+        if (savedProfile) user = JSON.parse(savedProfile);
+      } catch (e) {}
+      setSession({ access_token: savedToken, user });
     } else {
       localStorage.removeItem('google_access_token');
       localStorage.removeItem('google_token_expiry');
+      localStorage.removeItem('google_user_profile');
     }
     setLoading(false);
   }, []);

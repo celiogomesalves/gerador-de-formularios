@@ -8,20 +8,34 @@ export default function Login({ setSession }) {
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const login = useGoogleLogin({
-    onSuccess: (tokenResponse) => {
+    onSuccess: async (tokenResponse) => {
       const hasDriveAccess = tokenResponse.scope && tokenResponse.scope.includes('drive.file');
       if (!hasDriveAccess) {
-        setError('?? Você precisa marcar a caixinha permitindo o acesso ao Google Drive para podermos salvar os formulários!');
+        setError('⚠️ Você precisa marcar a caixinha permitindo o acesso ao Google Drive para podermos salvar os formulários!');
         return;
       }
-      // access_token expires usually in 3599 seconds
       const expiry = Date.now() + (tokenResponse.expires_in * 1000);
       localStorage.setItem('google_access_token', tokenResponse.access_token);
       localStorage.setItem('google_token_expiry', expiry.toString());
-      setSession({ access_token: tokenResponse.access_token });
+      
+      let user = null;
+      try {
+        const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+          headers: { "Authorization": `Bearer ${tokenResponse.access_token}` }
+        });
+        if (userInfoRes.ok) {
+          user = await userInfoRes.json();
+          localStorage.setItem('google_user_profile', JSON.stringify(user));
+        }
+      } catch (err) {
+        console.error("Erro ao buscar perfil do usuário:", err);
+      }
+
+      setSession({ access_token: tokenResponse.access_token, user });
     },
     onError: (error) => setError('Falha no login com Google: ' + error.message),
-    scope: 'https://www.googleapis.com/auth/drive.file', prompt: 'consent'
+    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+    prompt: 'consent'
   });
 
   return (

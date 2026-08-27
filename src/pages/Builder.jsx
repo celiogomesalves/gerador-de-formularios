@@ -1,3 +1,4 @@
+import { useGoogleLogin } from '@react-oauth/google';
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { 
@@ -339,7 +340,9 @@ export default function Builder({ session }) {
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Manual save to drive failed", err);
-      if (err.message.includes('404') || err.message.toLowerCase().includes('not found')) {
+      if (err.message.includes('401') || err.message.includes('403') || err.message.toLowerCase().includes('invalid_grant') || err.message.toLowerCase().includes('token')) {
+        setShowSessionModal(true);
+      } else if (err.message.includes('404') || err.message.toLowerCase().includes('not found')) {
         localStorage.removeItem('google_folder_id');
         setDriveFolderId(null);
         alert("Erro 404: A pasta base ou este arquivo não foi encontrado no Google Drive.\nO cache da pasta foi limpo. Por favor, clique em 'Salvar Alterações' novamente para recriar.");
@@ -2564,6 +2567,53 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
           )}
 
       </main>
+      {/* Modal de Renovação de Sessão Não-Destrutiva */}
+      {showSessionModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 20
+        }}>
+          <div className="glass-panel" style={{
+            maxWidth: 440,
+            width: '100%',
+            padding: 32,
+            borderRadius: 16,
+            textAlign: 'center',
+            background: 'var(--bg-primary)',
+            border: '1px solid var(--border-builder)',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.6)'
+          }}>
+            <div style={{ fontSize: 44, marginBottom: 16 }}>🔐</div>
+            <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 10, color: 'var(--text-main)' }}>Sessão do Google Expirada</h3>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 24 }}>
+              Sua sessão temporária de 1 hora com o Google Drive expirou. Suas alterações continuam salvas no seu navegador. Reconecte agora para continuar sincronizando com seu Drive:
+            </p>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button 
+                className="btn btn-outline" 
+                onClick={() => setShowSessionModal(false)}
+                style={{ flex: 1 }}
+              >
+                Depois
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => reconnectGoogle()}
+                style={{ flex: 2, background: 'var(--accent-color)', borderColor: 'var(--accent-color)' }}
+              >
+                Reconectar e Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

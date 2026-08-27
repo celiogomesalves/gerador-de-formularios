@@ -277,41 +277,48 @@ export default function PublicForm() {
       data[key] = value;
     }
 
-    // Inicializar todos os campos definidos no construtor para garantir que a chave exista no webhook (útil para n8n/zapier)
+    // Inicializar todos os campos definidos no construtor com os tipos corretos
     if (config && config.fields) {
       config.fields.forEach(field => {
         const payloadKey = field.label || field.key;
         if (field.type === 'checkbox') {
-          data[payloadKey] = false; // Checkbox único inicia falso
+          data[payloadKey] = false; // Checkbox único inicia booleano
+        } else if (field.type === 'checkbox_group') {
+          data[payloadKey] = []; // Múltipla escolha inicia como Array vazio
         } else {
-          data[payloadKey] = ''; // Outros iniciam vazios
+          data[payloadKey] = ''; // Outros iniciam string vazia
         }
       });
     }
-
-    const seenGroupKeys = new Set();
 
     for (let [key, value] of formData.entries()) {
       const fieldConfig = config.fields?.find(f => f.key === key);
       const payloadKey = fieldConfig && fieldConfig.label ? fieldConfig.label : key;
       
       if (fieldConfig && fieldConfig.type === 'checkbox') {
-        data[payloadKey] = true; // Se está no FormData, foi marcado
+        data[payloadKey] = true;
       } else if (fieldConfig && fieldConfig.type === 'checkbox_group') {
-        if (!seenGroupKeys.has(payloadKey)) {
-          data[payloadKey] = value;
-          seenGroupKeys.add(payloadKey);
-        } else {
-          data[payloadKey] = data[payloadKey] + ", " + value;
+        if (!Array.isArray(data[payloadKey])) {
+          data[payloadKey] = [];
         }
+        data[payloadKey].push(value);
       } else {
-        // Se a chave já tiver um valor diferente de string vazia (ex: campos duplicados com mesmo key), concatena
         if (data[payloadKey] && data[payloadKey] !== '') {
           data[payloadKey] = data[payloadKey] + ", " + value;
         } else {
           data[payloadKey] = value;
         }
       }
+    }
+
+    // Metadados estruturados para automações (n8n, Make, Zapier)
+    const queryParamsObj = {};
+    for (const [key, value] of urlParams.entries()) {
+      queryParamsObj[key] = value;
+    }
+    data.submittedAt = new Date().toISOString();
+    if (Object.keys(queryParamsObj).length > 0) {
+      data.formQueryParameters = queryParamsObj;
     }
     
     console.log('Dados submetidos:', data);

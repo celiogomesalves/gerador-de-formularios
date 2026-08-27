@@ -242,6 +242,7 @@ export default function Builder({ session }) {
   }, [formToken, googleToken]);
 
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [embedHideHeader, setEmbedHideHeader] = useState(false);
   const [embedTransparent, setEmbedTransparent] = useState(false);
 
@@ -2458,9 +2459,36 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
               <div style={{ padding: '0 0 16px 0', borderBottom: '1px solid var(--border-builder)' }}>
                 <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>Publicar Formulário</h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.5 }}>
-                  Incorpore (embed) este formulário em qualquer site (WordPress, Wix, Webflow, etc) colando o código iFrame abaixo.
+                  Compartilhe o link direto ou incorpore este formulário em qualquer site (WordPress, Wix, Webflow, etc).
                 </p>
               </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginTop: 8 }}>Link Direto do Formulário</h3>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <input 
+                    type="text" 
+                    readOnly 
+                    value={`${window.location.origin}/f/${formToken}`} 
+                    className="input-field" 
+                    style={{ flex: 1, fontFamily: 'monospace', fontSize: 13, background: 'var(--bg-card)' }}
+                  />
+                  <button 
+                    className="btn btn-primary"
+                    style={{ padding: '0 20px', background: linkCopied ? '#10b981' : 'var(--accent-color)', borderColor: linkCopied ? '#10b981' : 'var(--accent-color)' }}
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/f/${formToken}`);
+                      setLinkCopied(true);
+                      setTimeout(() => setLinkCopied(false), 2000);
+                    }}
+                  >
+                    {linkCopied ? <Check size={16} /> : <Copy size={16} />}
+                    {linkCopied ? 'Copiado!' : 'Copiar Link'}
+                  </button>
+                </div>
+              </div>
+              
+              <div style={{ width: '100%', height: 1, background: 'var(--border-builder)', margin: '8px 0' }}></div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>Opções de Visualização</h3>

@@ -597,7 +597,7 @@ input:checked + .slider:before {
 
 .public-form-logo-container {
   display: flex;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
 }
 
 .public-form-title {

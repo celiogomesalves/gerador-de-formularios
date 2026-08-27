@@ -55,9 +55,25 @@ export default function PublicForm() {
   const dbUrl = searchParams.get('db');
   const dbKey = searchParams.get('key');
 
+  const isPreview = searchParams.get('preview') === 'true';
+
   useEffect(() => {
     const loadConfig = async () => {
       try {
+        if (isPreview) {
+          const storedForm = localStorage.getItem(`form_${token}`);
+          if (storedForm) {
+            const parsedData = JSON.parse(storedForm);
+            setConfig({
+              fields: parsedData.fields || [],
+              design: { ...config.design, ...parsedData.design },
+              settings: { ...config.settings, ...parsedData.settings }
+            });
+            setLoading(false);
+            return;
+          }
+        }
+
         // Assume token is the Google Drive File ID
         // Note: uc endpoint might sometimes redirect to a HTML page if file is large, but JSON is small.
         const url = `https://drive.google.com/uc?export=download&id=${token}&t=${Date.now()}`;

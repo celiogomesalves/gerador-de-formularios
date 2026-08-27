@@ -174,7 +174,7 @@ export default function Home({ session, setSession }) {
                     <button className="btn btn-primary" style={{ padding: '10px' }} onClick={() => navigate(`/builder/${form.token}`)}>
                       <Edit size={16} /> Editar
                     </button>
-                    <button className="btn btn-outline" style={{ padding: '10px' }} onClick={() => window.open(`/f/${form.token}`, '_blank')}>
+                    <button className="btn btn-outline" style={{ padding: '10px' }} onClick={() => window.open(`/f/${form.token}?preview=true`, '_blank')}>
                       <ExternalLink size={16} /> Ver Ao Vivo
                     </button>
                     <button className="btn btn-outline" style={{ padding: '10px' }} onClick={() => duplicateForm(form.token)}>

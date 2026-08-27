@@ -903,7 +903,7 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
             <ArrowLeft size={16} />
             Dashboard
           </button>
-          <button className="btn btn-outline" onClick={() => window.open(`/f/${formToken}`, '_blank')}>
+          <button className="btn btn-outline" onClick={() => window.open(`/f/${formToken}?preview=true`, '_blank')}>
             <Link size={16} />
             Visualizar Externo
           </button>

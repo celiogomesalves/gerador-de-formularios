@@ -1156,11 +1156,11 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                           </div>
                         </div>
                         
-                        <div style={{ padding: '15px', border: '1px solid #ddd', borderRadius: '8px', marginBottom: '16px', background: '#f9f9f9' }}>
+                        <div style={{ padding: '15px', border: '1px solid var(--border-builder)', borderRadius: '8px', marginBottom: '16px', background: 'var(--bg-elevated)' }}>
                           <label className="input-label" style={{ fontWeight: 'bold', marginBottom: '10px', display: 'block' }}>Logomarca (Imagem do Dispositivo ou URL)</label>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                              <label className="btn btn-outline" style={{ cursor: 'pointer', margin: 0, padding: '10px 15px', fontSize: '13px', background: 'white' }}>
+                              <label className="btn btn-outline" style={{ cursor: 'pointer', margin: 0, padding: '10px 15px', fontSize: '13px', background: 'transparent' }}>
                                 📁 Escolher Imagem do Dispositivo
                                 <input 
                                   type="file" 
@@ -1174,7 +1174,7 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                                 <button 
                                   type="button" 
                                   className="btn btn-outline danger" 
-                                  style={{ padding: '10px 15px', fontSize: '13px', borderColor: 'var(--danger-color)', color: 'var(--danger-color)', background: 'white' }}
+                                  style={{ padding: '10px 15px', fontSize: '13px', borderColor: 'var(--danger-color)', color: 'var(--danger-color)', background: 'transparent' }}
                                   onClick={() => setDesign({...design, logoUrl: ''})}
                                 >
                                   Remover Logo
@@ -1190,13 +1190,13 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                                 value={design.logoUrl?.startsWith?.('data:image') ? 'Imagem Carregada Localmente' : (design.logoUrl || '')} 
                                 onChange={(e) => setDesign({...design, logoUrl: e.target.value})} 
                                 disabled={design.logoUrl?.startsWith?.('data:image')}
-                                style={{ flex: 1, padding: '10px', border: '1px solid #ccc', borderRadius: '6px' }}
+                                style={{ flex: 1, padding: '10px', border: '1px solid var(--border-builder)', borderRadius: '6px', background: 'transparent', color: 'var(--text-main)' }}
                               />
                               {!design.logoUrl && (
                                 <button 
                                   type="button" 
                                   className="btn btn-outline" 
-                                  style={{ padding: '0 15px', fontSize: '12px', whiteSpace: 'nowrap', background: 'white' }}
+                                  style={{ padding: '0 15px', fontSize: '12px', whiteSpace: 'nowrap', background: 'transparent' }}
                                   onClick={() => setDesign({...design, logoUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120&auto=format&fit=crop&q=60'})}
                                 >
                                   Usar Logo Demo

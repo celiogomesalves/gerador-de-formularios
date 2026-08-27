@@ -74,17 +74,16 @@ export default function PublicForm() {
           }
         }
 
-        // Use Google Drive API v3 public endpoint (file must have 'anyone' reader permission)
-        const apiUrl = `https://www.googleapis.com/drive/v3/files/${token}?alt=media&key=AIzaSyBqRMGkiKmM9s5JFNmmwg2IJSaBgeVP74w`;
         let loaded = false;
-        
+
+        // 1. Fetch form data via serverless proxy /api/form
         try {
+          const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          const apiUrl = `/api/form?id=${encodeURIComponent(token)}&t=${Date.now()}`;
           const response = await fetch(apiUrl);
           if (response.ok) {
-            const text = await response.text();
-            // Verify it's actually JSON (not an HTML error page)
-            if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
-              const parsedData = JSON.parse(text);
+            const parsedData = await response.json();
+            if (parsedData && (parsedData.fields || parsedData.design)) {
               setConfig({
                 fields: parsedData.fields || [],
                 design: { ...config.design, ...parsedData.design },
@@ -94,32 +93,10 @@ export default function PublicForm() {
             }
           }
         } catch (apiErr) {
-          console.warn('Drive API fetch failed, trying fallback:', apiErr);
+          console.warn('API /api/form fetch failed, trying fallbacks:', apiErr);
         }
-        
-        // Fallback 1: Try uc endpoint
-        if (!loaded) {
-          try {
-            const ucUrl = `https://drive.google.com/uc?export=download&id=${token}&t=${Date.now()}`;
-            const ucResponse = await fetch(ucUrl);
-            if (ucResponse.ok) {
-              const text = await ucResponse.text();
-              if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
-                const parsedData = JSON.parse(text);
-                setConfig({
-                  fields: parsedData.fields || [],
-                  design: { ...config.design, ...parsedData.design },
-                  settings: { ...config.settings, ...parsedData.settings }
-                });
-                loaded = true;
-              }
-            }
-          } catch (ucErr) {
-            console.warn('UC endpoint failed:', ucErr);
-          }
-        }
-        
-        // Fallback 2: localStorage
+
+        // 2. Fallback to localStorage (e.g. for offline/local drafts)
         if (!loaded) {
           const storedForm = localStorage.getItem(`form_${token}`);
           if (storedForm) {

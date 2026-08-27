@@ -301,6 +301,49 @@ export default function Builder({ session }) {
     saveConfigToLocal();
   };
 
+  const [isSavingManual, setIsSavingManual] = useState(false);
+  const handleManualSave = async () => {
+    saveConfigToLocal();
+    if (!googleToken) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      return;
+    }
+    
+    setIsSavingManual(true);
+    try {
+      const configData = { fields, design, settings };
+      const isNew = formToken.startsWith('new_');
+      let folderId = driveFolderId;
+      
+      if (!folderId) {
+         const { getOrCreateFolder } = await import('../lib/googleDrive');
+         folderId = await getOrCreateFolder(googleToken);
+         setDriveFolderId(folderId);
+         localStorage.setItem('google_folder_id', folderId);
+      }
+      
+      const fileId = await saveFormToDrive(
+         googleToken, 
+         folderId, 
+         design.titleText || 'Formulário Sem Título', 
+         configData, 
+         isNew ? null : formToken
+      );
+      
+      if (isNew && fileId) {
+         navigate(`/builder/${fileId}`, { replace: true });
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Manual save to drive failed", err);
+      alert("Erro ao salvar no Google Drive: " + err.message);
+    } finally {
+      setIsSavingManual(false);
+    }
+  };
+
   const saveConfigToLocal = async () => {
     const configData = { fields, design, settings };
     localStorage.setItem(`form_${formToken}`, JSON.stringify(configData));
@@ -818,14 +861,11 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
           <button 
             className="btn btn-primary" 
             style={{ width: '100%', background: copied ? '#10b981' : 'var(--accent-color)', borderColor: copied ? '#10b981' : 'var(--accent-color)' }}
-            onClick={() => {
-              saveConfigToLocal();
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            }}
+            onClick={handleManualSave}
+            disabled={isSavingManual}
           >
             {copied ? <Check size={16} /> : <span style={{ fontSize: 16 }}>💾</span>}
-            {copied ? 'Salvo com sucesso!' : 'Salvar Alterações'}
+            {isSavingManual ? 'Salvando...' : copied ? 'Salvo com sucesso!' : 'Salvar Alterações'}
           </button>
         </div>
 

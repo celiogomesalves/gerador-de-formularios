@@ -2,8 +2,9 @@ import React from 'react';
 
 export default function PrivacyPolicy() {
   return (
-    <div style={{ padding: '40px', maxWidth: '800px', margin: '0 auto', fontFamily: 'sans-serif', lineHeight: '1.6', color: '#333' }}>
-      <h1 style={{ fontSize: '32px', marginBottom: '20px', color: '#0f172a' }}>Política de Privacidade</h1>
+    <div style={{ height: '100vh', overflowY: 'auto', backgroundColor: '#f4f5f8' }}>
+      <div style={{ padding: '40px', maxWidth: '800px', margin: '0 auto', fontFamily: 'sans-serif', lineHeight: '1.6', color: '#333' }}>
+        <h1 style={{ fontSize: '32px', marginBottom: '20px', color: '#0f172a' }}>Política de Privacidade</h1>
       <p style={{ color: '#64748b' }}>Última atualização: {new Date().toLocaleDateString('pt-BR')}</p>
       
       <h2 style={{ marginTop: '32px', color: '#0f172a' }}>1. Introdução</h2>
@@ -32,6 +33,7 @@ export default function PrivacyPolicy() {
       
       <h2 style={{ marginTop: '32px', color: '#0f172a' }}>7. Contato</h2>
       <p>Se você tiver alguma dúvida sobre esta Política de Privacidade, entre em contato com o desenvolvedor através do nosso domínio principal.</p>
+      </div>
     </div>
   );
 }

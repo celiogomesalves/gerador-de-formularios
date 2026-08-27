@@ -78,7 +78,7 @@ export default function Builder({ session }) {
   
   const [expandedFields, setExpandedFields] = useState({});
   const toggleField = (id) => {
-    setExpandedFields(prev => ({ ...prev, [id]: prev[id] === undefined ? false : !prev[id] }));
+    setExpandedFields(prev => ({ ...prev, [id]: prev[id] === undefined ? true : !prev[id] }));
   };
   
   const collapseAllFields = () => {
@@ -911,7 +911,7 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                       >
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
                           <div style={{ marginTop: 2, display: 'flex' }}>
-                            {expandedFields[field.id] !== false ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                            {expandedFields[field.id] === true ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             <span className="field-card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -960,7 +960,7 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                         </div>
                       </div>
                       
-                      {expandedFields[field.id] !== false && (
+                      {expandedFields[field.id] === true && (
                         <>
                           <div className="field-card-body">
                         <div>

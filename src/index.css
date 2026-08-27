@@ -637,3 +637,41 @@ input:checked + .slider:before {
   transform: translateY(-2px);
   filter: brightness(1.1);
 }
+
+/* Theme Presets */
+.theme-presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.preset-card {
+  border: 1px solid var(--border-builder);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.preset-card:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.preset-card.active {
+  border-color: var(--accent-color);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 1px var(--accent-color);
+}
+
+.preset-preview-bar {
+  height: 24px;
+  border-radius: 4px;
+  width: 100%;
+}

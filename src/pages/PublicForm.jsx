@@ -270,12 +270,7 @@ export default function PublicForm() {
     
     const formData = new FormData(e.target);
     const data = {};
-    
-    // Capturar parâmetros de URL (Query Strings)
     const urlParams = new URLSearchParams(window.location.search);
-    for (const [key, value] of urlParams.entries()) {
-      data[key] = value;
-    }
 
     // Inicializar todos os campos definidos no construtor com os tipos corretos
     if (config && config.fields) {

@@ -4,6 +4,8 @@ import Builder from './pages/Builder';
 import PublicForm from './pages/PublicForm';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import './App.css';
 
@@ -37,6 +39,8 @@ function App() {
         <Route path="/" element={session ? <Home session={session} setSession={setSession} /> : <Navigate to="/login" />} />
         <Route path="/builder/:token" element={session ? <Builder session={session} /> : <Navigate to="/login" />} />
         <Route path="/f/:token" element={<PublicForm />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
       </Routes>
     </GoogleOAuthProvider>
   );

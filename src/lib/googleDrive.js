@@ -120,9 +120,12 @@ export const saveFormToDrive = async (token, folderId, formName, formConfig, exi
     body: multipartRequestBody
   }, token);
 
-  // If new, make it public
-  if (!existingFileId) {
+  // Always ensure the file is publicly readable so the public form URL works
+  try {
     await makeFilePublic(result.id, token);
+  } catch (e) {
+    // Permission may already exist, that's OK
+    console.warn('makeFilePublic notice:', e.message);
   }
 
   return result.id;

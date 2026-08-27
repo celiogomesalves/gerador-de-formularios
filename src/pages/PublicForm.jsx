@@ -74,20 +74,53 @@ export default function PublicForm() {
           }
         }
 
-        // Assume token is the Google Drive File ID
-        // Note: uc endpoint might sometimes redirect to a HTML page if file is large, but JSON is small.
-        const url = `https://drive.google.com/uc?export=download&id=${token}&t=${Date.now()}`;
-        const response = await fetch(url);
+        // Use Google Drive API v3 public endpoint (file must have 'anyone' reader permission)
+        const apiUrl = `https://www.googleapis.com/drive/v3/files/${token}?alt=media&key=AIzaSyBqRMGkiKmM9s5JFNmmwg2IJSaBgeVP74w`;
+        let loaded = false;
         
-        if (response.ok) {
-          const parsedData = await response.json();
-          setConfig({
-            fields: parsedData.fields || [],
-            design: { ...config.design, ...parsedData.design },
-            settings: { ...config.settings, ...parsedData.settings }
-          });
-        } else {
-          // If not found in drive, fallback to localStorage (for old local tests)
+        try {
+          const response = await fetch(apiUrl);
+          if (response.ok) {
+            const text = await response.text();
+            // Verify it's actually JSON (not an HTML error page)
+            if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
+              const parsedData = JSON.parse(text);
+              setConfig({
+                fields: parsedData.fields || [],
+                design: { ...config.design, ...parsedData.design },
+                settings: { ...config.settings, ...parsedData.settings }
+              });
+              loaded = true;
+            }
+          }
+        } catch (apiErr) {
+          console.warn('Drive API fetch failed, trying fallback:', apiErr);
+        }
+        
+        // Fallback 1: Try uc endpoint
+        if (!loaded) {
+          try {
+            const ucUrl = `https://drive.google.com/uc?export=download&id=${token}&t=${Date.now()}`;
+            const ucResponse = await fetch(ucUrl);
+            if (ucResponse.ok) {
+              const text = await ucResponse.text();
+              if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
+                const parsedData = JSON.parse(text);
+                setConfig({
+                  fields: parsedData.fields || [],
+                  design: { ...config.design, ...parsedData.design },
+                  settings: { ...config.settings, ...parsedData.settings }
+                });
+                loaded = true;
+              }
+            }
+          } catch (ucErr) {
+            console.warn('UC endpoint failed:', ucErr);
+          }
+        }
+        
+        // Fallback 2: localStorage
+        if (!loaded) {
           const storedForm = localStorage.getItem(`form_${token}`);
           if (storedForm) {
             const parsedData = JSON.parse(storedForm);
@@ -96,9 +129,12 @@ export default function PublicForm() {
               design: { ...config.design, ...parsedData.design },
               settings: { ...config.settings, ...parsedData.settings }
             });
-          } else {
-             throw new Error('Not found locally or in Drive');
+            loaded = true;
           }
+        }
+        
+        if (!loaded) {
+          throw new Error('Not found in any source');
         }
       } catch (e) {
         console.error("Erro ao ler configuração do formulário:", e);

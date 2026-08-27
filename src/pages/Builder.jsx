@@ -1110,6 +1110,31 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
             <>
               <h1 style={{ marginBottom: 24 }}><Palette size={22} style={{ color: 'var(--accent-color)' }} /> Design do Formulário</h1>
               
+              {/* Form Mode Selector */}
+              <div className="design-accordion" style={{ marginBottom: 16 }}>
+                <div className="design-accordion-content" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <label className="input-label" style={{ marginBottom: 4 }}>Modo de Apresentação</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div 
+                      className={`preset-card ${(!design.formMode || design.formMode === 'classic') ? 'active' : ''}`}
+                      onClick={() => setDesign({...design, formMode: 'classic'})}
+                      style={{ padding: '16px', textAlign: 'center' }}
+                    >
+                      <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>Clássico</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Tudo em uma página</div>
+                    </div>
+                    <div 
+                      className={`preset-card ${design.formMode === 'multistep' ? 'active' : ''}`}
+                      onClick={() => setDesign({...design, formMode: 'multistep'})}
+                      style={{ padding: '16px', textAlign: 'center' }}
+                    >
+                      <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>Passo a Passo</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Uma pergunta por tela</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
               {/* Accordion 1: Cabeçalho */}
               <div className="design-accordion">
                 <div className="design-accordion-header" onClick={() => setOpenSection(openSection === 'header' ? '' : 'header')}>

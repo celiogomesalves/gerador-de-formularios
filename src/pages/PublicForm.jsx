@@ -45,6 +45,7 @@ export default function PublicForm() {
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
   const [success, setSuccess] = useState(false);
 
   // Parse embed query params
@@ -372,6 +373,8 @@ export default function PublicForm() {
     }
   };
 
+  const isMultistep = config?.design?.formMode === 'multistep';
+
   if (loading) {
     return (
       <div style={{ 
@@ -456,8 +459,21 @@ export default function PublicForm() {
               </div>
             )}
             
-            <form onSubmit={handleSubmit}>
-              {config.fields.map(field => (
+            {isMultistep && config.fields.length > 0 && !success && (
+              <div style={{ marginBottom: 32 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: config.design.mode === 'dark' ? '#94a3b8' : '#64748b', marginBottom: 8, fontWeight: 500 }}>
+                  <span>Passo {currentStep + 1} de {config.fields.length}</span>
+                  <span>{Math.round(((currentStep + 1) / config.fields.length) * 100)}%</span>
+                </div>
+                <div style={{ height: 6, width: '100%', backgroundColor: config.design.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${((currentStep + 1) / config.fields.length) * 100}%`, backgroundColor: config.design.themeColor, transition: 'width 0.4s ease' }} />
+                </div>
+              </div>
+            )}
+            <form onSubmit={handleSubmit} id="public-form">
+              {config.fields.map((field, index) => {
+                if (isMultistep && index !== currentStep) return null;
+                return (
                 <div key={field.id} className="public-form-group">
                   <label className="public-form-label" style={{ color: config.design.mode === 'dark' ? '#cbd5e1' : '#374151' }}>
                     {field.label} {field.required && <span style={{ color: '#ef4444' }}>*</span>}
@@ -574,24 +590,81 @@ export default function PublicForm() {
                     />
                   )}
                 </div>
-              ))}
+              );})}
               
-              <button 
-                type="submit" 
-                disabled={submitting}
-                className="public-form-btn" 
-                style={{ 
-                  width: '100%', 
-                  marginTop: 16, 
-                  backgroundColor: config.design.submitButtonColor || config.design.themeColor, 
-                  color: config.design.submitButtonTextColor || '#ffffff',
-                  opacity: submitting ? 0.7 : 1,
-                  borderRadius: `${config.design.borderRadius}px`,
-                  boxShadow: `0 4px 12px ${config.design.submitButtonColor || config.design.themeColor}40`
-                }}
-              >
-                {submitting ? 'Enviando...' : (config.design.submitButtonText || 'Enviar Dados')}
-              </button>
+              {isMultistep ? (
+                <div style={{ display: 'flex', gap: 12, marginTop: 32 }}>
+                  {currentStep > 0 && (
+                    <button 
+                      type="button" 
+                      className="public-form-btn" 
+                      onClick={() => setCurrentStep(prev => prev - 1)} 
+                      style={{ 
+                        flex: 1, 
+                        backgroundColor: 'transparent', 
+                        color: config.design.mode === 'dark' ? '#fff' : '#000', 
+                        border: `1px solid ${config.design.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
+                        borderRadius: `${config.design.borderRadius}px`
+                      }}
+                    >
+                      Voltar
+                    </button>
+                  )}
+                  {currentStep < config.fields.length - 1 ? (
+                    <button 
+                      type="button" 
+                      className="public-form-btn" 
+                      onClick={() => {
+                        const form = document.getElementById('public-form');
+                        if (form.reportValidity()) {
+                          setCurrentStep(prev => prev + 1);
+                        }
+                      }} 
+                      style={{ 
+                        flex: 1, 
+                        backgroundColor: config.design.submitButtonColor || config.design.themeColor, 
+                        color: config.design.submitButtonTextColor || '#ffffff',
+                        borderRadius: `${config.design.borderRadius}px`
+                      }}
+                    >
+                      Próximo
+                    </button>
+                  ) : (
+                    <button 
+                      type="submit" 
+                      disabled={submitting}
+                      className="public-form-btn" 
+                      style={{ 
+                        flex: 1, 
+                        backgroundColor: config.design.submitButtonColor || config.design.themeColor, 
+                        color: config.design.submitButtonTextColor || '#ffffff', 
+                        opacity: submitting ? 0.7 : 1,
+                        borderRadius: `${config.design.borderRadius}px`,
+                        boxShadow: `0 4px 12px ${config.design.submitButtonColor || config.design.themeColor}40`
+                      }}
+                    >
+                      {submitting ? 'Enviando...' : (config.design.submitButtonText || 'Enviar Dados')}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <button 
+                  type="submit" 
+                  disabled={submitting}
+                  className="public-form-btn" 
+                  style={{ 
+                    width: '100%', 
+                    marginTop: 16, 
+                    backgroundColor: config.design.submitButtonColor || config.design.themeColor, 
+                    color: config.design.submitButtonTextColor || '#ffffff',
+                    opacity: submitting ? 0.7 : 1,
+                    borderRadius: `${config.design.borderRadius}px`,
+                    boxShadow: `0 4px 12px ${config.design.submitButtonColor || config.design.themeColor}40`
+                  }}
+                >
+                  {submitting ? 'Enviando...' : (config.design.submitButtonText || 'Enviar Dados')}
+                </button>
+              )}
             </form>
           </>
         )}

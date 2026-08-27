@@ -1040,10 +1040,31 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                                     value={opt} 
                                     onChange={(e) => {
                                       const newOpts = [...(field.options || ['Opção 1'])];
+                                      const oldVal = newOpts[optIndex];
                                       newOpts[optIndex] = e.target.value;
-                                      updateField(field.id, 'options', newOpts);
+                                      let newExc = field.exclusiveOptions || [];
+                                      if (newExc.includes(oldVal)) {
+                                        newExc = newExc.map(v => v === oldVal ? e.target.value : v);
+                                      }
+                                      // Usando setFields diretamente para atualizar múltiplas propriedades
+                                      setFields(fields.map(f => f.id === field.id ? { ...f, options: newOpts, exclusiveOptions: newExc } : f));
                                     }} 
                                   />
+                                  {field.type === 'checkbox' && (
+                                    <button
+                                      type="button"
+                                      className={`icon-btn ${(field.exclusiveOptions || []).includes(opt) ? 'active' : ''}`}
+                                      style={{ padding: 6, height: 'auto', color: (field.exclusiveOptions || []).includes(opt) ? '#fbbf24' : 'var(--text-muted)' }}
+                                      title="Tornar opção exclusiva (desmarca outras)"
+                                      onClick={() => {
+                                        const exc = field.exclusiveOptions || [];
+                                        const newExc = exc.includes(opt) ? exc.filter(e => e !== opt) : [...exc, opt];
+                                        updateField(field.id, 'exclusiveOptions', newExc);
+                                      }}
+                                    >
+                                      <Sparkles size={14} />
+                                    </button>
+                                  )}
                                   <button 
                                     type="button" 
                                     className="icon-btn danger" 

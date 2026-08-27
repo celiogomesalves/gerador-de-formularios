@@ -8,6 +8,7 @@ export default function Home({ session, setSession }) {
   const [forms, setForms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [folderId, setFolderId] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const navigate = useNavigate();
   const token = session.access_token;
 
@@ -42,6 +43,14 @@ export default function Home({ session, setSession }) {
 
   useEffect(() => {
     loadFormsFromDrive();
+    if (token) {
+      fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { "Authorization": "Bearer " + token }
+      })
+      .then(r => r.json())
+      .then(d => setUserProfile(d))
+      .catch(e => console.error(e));
+    }
   }, [token]);
 
   const createNewForm = () => {
@@ -96,7 +105,22 @@ export default function Home({ session, setSession }) {
           </button>
         </div>
 
-        <div style={{ marginTop: 'auto' }}>
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {userProfile && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              {userProfile.picture ? (
+                <img src={userProfile.picture} alt="Avatar" style={{ width: 36, height: 36, borderRadius: '50%' }} />
+              ) : (
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                  {userProfile.name?.[0] || userProfile.email?.[0] || 'U'}
+                </div>
+              )}
+              <div style={{ overflow: 'hidden' }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{userProfile.name || 'Usuário'}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{userProfile.email}</div>
+              </div>
+            </div>
+          )}
           <button className="tab-btn" onClick={handleLogout} style={{ color: 'var(--danger-color)' }}>
             <LogOut size={18} /> Sair da Conta
           </button>

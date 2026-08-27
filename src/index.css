@@ -25,6 +25,13 @@
   --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   --font-inter: 'Inter', sans-serif;
   --font-jakarta: 'Plus Jakarta Sans', sans-serif;
+  --font-outfit: 'Outfit', sans-serif;
+  --font-playfair: 'Playfair Display', serif;
+  --font-montserrat: 'Montserrat', sans-serif;
+  --font-poppins: 'Poppins', sans-serif;
+  --font-lora: 'Lora', serif;
+  --font-space: 'Space Grotesk', sans-serif;
+  --font-cinzel: 'Cinzel', serif;
 }
 
 * {

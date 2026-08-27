@@ -111,7 +111,7 @@ export default function Home({ session, setSession }) {
             <h1 style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-main)', marginBottom: 6, letterSpacing: '-0.02em' }}>Dashboard</h1>
             <p style={{ color: 'var(--text-muted)', fontSize: 15 }}>Gerencie seus formulários sincronizados com o Google Drive.</p>
           </div>
-          <button className="btn btn-primary" style={{ padding: '12px 24px', fontSize: 15, borderRadius: '12px', boxShadow: '0 8px 16px -4px rgba(2, 132, 199, 0.4)' }} onClick={createNewForm} disabled={loading}>
+          <button className="btn btn-primary" style={{ width: 'auto', padding: '12px 24px', fontSize: 15, borderRadius: '12px', boxShadow: '0 8px 16px -4px rgba(2, 132, 199, 0.4)' }} onClick={createNewForm} disabled={loading}>
             <Plus size={20} /> Criar Novo Formulário
           </button>
         </div>

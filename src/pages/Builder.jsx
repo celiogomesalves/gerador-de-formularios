@@ -338,7 +338,13 @@ export default function Builder({ session }) {
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Manual save to drive failed", err);
-      alert("Erro ao salvar no Google Drive: " + err.message);
+      if (err.message.includes('404') || err.message.toLowerCase().includes('not found')) {
+        localStorage.removeItem('google_folder_id');
+        setDriveFolderId(null);
+        alert("Erro 404: A pasta base ou este arquivo não foi encontrado no Google Drive.\nO cache da pasta foi limpo. Por favor, clique em 'Salvar Alterações' novamente para recriar.");
+      } else {
+        alert("Erro ao salvar no Google Drive: " + err.message);
+      }
     } finally {
       setIsSavingManual(false);
     }
@@ -379,6 +385,10 @@ export default function Builder({ session }) {
         }
       } catch (err) {
         console.error("Auto-save to drive failed", err);
+        if (err.message.includes('404') || err.message.toLowerCase().includes('not found')) {
+          localStorage.removeItem('google_folder_id');
+          setDriveFolderId(null);
+        }
       }
     }, 2000); // 2 second debounce
     

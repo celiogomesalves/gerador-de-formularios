@@ -1746,7 +1746,7 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                             {appsScriptCopied ? 'Copiado!' : 'Copiar Código'}
                           </button>
                         </div>
-                        <pre style={{ background: '#f8fafc', padding: 12, borderRadius: 8, fontSize: 11, fontFamily: 'monospace', overflowX: 'auto', maxHeight: 120, border: '1px solid var(--border-builder)', color: '#0369a1' }}>
+                        <pre style={{ background: 'var(--bg-card)', padding: 12, borderRadius: 8, fontSize: 11, fontFamily: 'monospace', overflowX: 'auto', maxHeight: 120, border: '1px solid var(--border-builder)', color: '#0369a1' }}>
                           {googleAppsScriptCode}
                         </pre>
                       </div>
@@ -2085,7 +2085,7 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
                   </div>
 
                   {/* Supabase Wizard Steps Container */}
-                  <div style={{ background: '#f8fafc', padding: 18, borderRadius: 12, border: '1px solid var(--border-builder)', marginBottom: 20 }}>
+                  <div style={{ background: 'var(--bg-card)', padding: 18, borderRadius: 12, border: '1px solid var(--border-builder)', marginBottom: 20 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid var(--border-builder)', paddingBottom: 10 }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent-color)' }}>
                         Assistente de Armazenamento - Passo {wizardStep} de 4
@@ -2161,7 +2161,7 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
                               {sqlCopied ? 'Copiado!' : 'Copiar SQL'}
                             </button>
                           </div>
-                          <pre style={{ background: '#f8fafc', padding: 12, borderRadius: 8, fontSize: 11, fontFamily: 'monospace', overflowX: 'auto', maxHeight: 150, border: '1px solid var(--border-builder)', color: '#047857' }}>
+                          <pre style={{ background: 'var(--bg-card)', padding: 12, borderRadius: 8, fontSize: 11, fontFamily: 'monospace', overflowX: 'auto', maxHeight: 150, border: '1px solid var(--border-builder)', color: '#047857' }}>
                             {supabaseSqlCode}
                           </pre>
                         </div>

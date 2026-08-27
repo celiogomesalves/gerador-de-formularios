@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useGoogleLogin } from '@react-oauth/google';
 import { Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function Login({ setSession }) {
   const [error, setError] = useState(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => {
@@ -33,13 +35,40 @@ export default function Login({ setSession }) {
             </div>
           )}
 
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 24 }}>
+            <input 
+              type="checkbox" 
+              id="terms" 
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              style={{ marginTop: 4, width: 16, height: 16, accentColor: 'var(--accent-color)' }}
+            />
+            <label htmlFor="terms" style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: '1.4' }}>
+              Eu concordo com os <Link to="/terms" style={{ color: 'var(--accent-color)', textDecoration: 'none' }}>Termos de Serviço</Link> e a <Link to="/privacy" style={{ color: 'var(--accent-color)', textDecoration: 'none' }}>Política de Privacidade</Link>.
+            </label>
+          </div>
+
           <button 
             type="button" 
             className="btn btn-outline" 
-            style={{ width: '100%', padding: '12px', fontSize: 15, background: '#ffffff', color: '#333', borderColor: '#e2e8f0', display: 'flex', justifyContent: 'center', gap: 10, alignItems: 'center', cursor: 'pointer' }}
-            onClick={() => login()}
+            disabled={!termsAccepted}
+            style={{ 
+              width: '100%', 
+              padding: '12px', 
+              fontSize: 15, 
+              background: '#ffffff', 
+              color: '#333', 
+              borderColor: '#e2e8f0', 
+              display: 'flex', 
+              justifyContent: 'center', 
+              gap: 10, 
+              alignItems: 'center', 
+              cursor: termsAccepted ? 'pointer' : 'not-allowed',
+              opacity: termsAccepted ? 1 : 0.6
+            }}
+            onClick={() => termsAccepted && login()}
           >
-            <img src="https://www.google.com/favicon.ico" width={20} alt="Google" style={{ objectFit: 'contain' }} />
+            <img src="https://www.google.com/favicon.ico" width={20} alt="Google" style={{ objectFit: 'contain', filter: termsAccepted ? 'none' : 'grayscale(100%)' }} />
             Continuar com Google
           </button>
         </div>

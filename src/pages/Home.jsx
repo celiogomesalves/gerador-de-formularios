@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { Plus, Layout, FileText, LogOut, Sparkles, ExternalLink, Edit, Trash2, Copy } from 'lucide-react';
@@ -29,8 +29,12 @@ export default function Home({ session, setSession }) {
       setForms(formattedForms);
     } catch (e) {
       console.error('Error loading forms from Drive', e);
-      alert('Erro ao carregar do Google Drive. Tente fazer login novamente.');
-      handleLogout();
+      if (e.message.includes('403') || e.message.includes('401')) {
+         alert('Permissões insuficientes ou token expirado. Por favor, faça login novamente e marque a caixa permitindo o acesso ao Drive.');
+         handleLogout();
+      } else {
+         alert('Falha temporária ao sincronizar com o Google Drive. Recarregue a página.');
+      }
     } finally {
       setLoading(false);
     }
@@ -46,7 +50,7 @@ export default function Home({ session, setSession }) {
   };
 
   const deleteForm = async (fileId) => {
-    if (window.confirm('Tem certeza que deseja excluir este formulário do seu Google Drive?')) {
+    if (window.confirm('Tem certeza que deseja excluir este formulÃ¡rio do seu Google Drive?')) {
       try {
         await deleteFormFromDrive(token, fileId);
         loadFormsFromDrive();
@@ -61,7 +65,7 @@ export default function Home({ session, setSession }) {
       const data = await getFormFromDrive(token, fileId);
       
       if (data.design && data.design.titleText) {
-        data.design.titleText = `${data.design.titleText} (Cópia)`;
+        data.design.titleText = `${data.design.titleText} (CÃ³pia)`;
       }
       
       await saveFormToDrive(token, folderId, data.design.titleText, data, null);
@@ -88,7 +92,7 @@ export default function Home({ session, setSession }) {
         
         <div className="tabs">
           <button className="tab-btn active">
-            <Layout size={18} /> Meus Formulários
+            <Layout size={18} /> Meus FormulÃ¡rios
           </button>
         </div>
 
@@ -104,10 +108,10 @@ export default function Home({ session, setSession }) {
         <div className="glass-header">
           <div>
             <h1 className="gradient-text" style={{ fontSize: 32, fontWeight: 800, marginBottom: 6, letterSpacing: '-0.02em' }}>Dashboard</h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>Gerencie seus formulários sincronizados com o Google Drive.</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>Gerencie seus formulÃ¡rios sincronizados com o Google Drive.</p>
           </div>
           <button className="btn btn-primary" onClick={createNewForm} disabled={loading}>
-            <Plus size={20} /> Criar Novo Formulário
+            <Plus size={20} /> Criar Novo FormulÃ¡rio
           </button>
         </div>
 
@@ -121,8 +125,8 @@ export default function Home({ session, setSession }) {
           ) : forms.length === 0 ? (
             <div className="glass-panel animate-fade-up" style={{ textAlign: 'center', padding: '80px 24px', borderRadius: 'var(--radius-lg)', borderStyle: 'dashed', borderWidth: 1 }}>
               <FileText size={64} style={{ color: 'var(--text-muted)', margin: '0 auto 20px' }} />
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Nenhum formulário criado</h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: 15, marginBottom: 32, maxWidth: 400, margin: '0 auto 32px' }}>Você ainda não criou nenhum formulário. Comece agora mesmo e sincronize com seu Drive.</p>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Nenhum formulÃ¡rio criado</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 15, marginBottom: 32, maxWidth: 400, margin: '0 auto 32px' }}>VocÃª ainda nÃ£o criou nenhum formulÃ¡rio. Comece agora mesmo e sincronize com seu Drive.</p>
               <button className="btn btn-primary" onClick={createNewForm} style={{ padding: '12px 32px' }}>Criar Meu Primeiro Form</button>
             </div>
           ) : (
@@ -135,7 +139,7 @@ export default function Home({ session, setSession }) {
                       <span style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 999 }}>
                         <img src="https://www.google.com/drive/static/images/drive/logo-drive.png" height="14" alt="Drive" /> Google Drive
                       </span>
-                      <span style={{ opacity: 0.3 }}>•</span>
+                      <span style={{ opacity: 0.3 }}>â€¢</span>
                       <span>{form.date}</span>
                     </div>
                   </div>
@@ -166,3 +170,4 @@ export default function Home({ session, setSession }) {
     </div>
   );
 }
+

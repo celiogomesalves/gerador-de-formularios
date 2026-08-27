@@ -1,14 +1,28 @@
-const FOLDER_NAME = 'FormGen Agenc-ia';
+﻿const FOLDER_NAME = 'FormGen Agenc-ia';
 const FOLDER_MIME_TYPE = 'application/vnd.google-apps.folder';
 const FILE_MIME_TYPE = 'application/json';
 
 // Helper for making API calls to Google Drive
-const fetchDriveApi = async (url, options = {}, token) => {
+const fetchDriveApi = async (url, options = {}, token, retries = 2) => {
   const headers = new Headers(options.headers || {});
   headers.append('Authorization', `Bearer ${token}`);
   
-  const response = await fetch(url, { ...options, headers });
-  // DELETE returns 204 No Content, so we shouldn't parse JSON
+  let response;
+  for (let i = 0; i <= retries; i++) {
+    response = await fetch(url, { ...options, headers });
+    
+    if (response.ok || response.status === 204) {
+      break;
+    }
+    
+    if (i < retries && (response.status === 401 || response.status >= 500)) {
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      continue;
+    }
+    
+    break;
+  }
+
   if (response.status === 204) return null;
   
   if (!response.ok) {
@@ -128,3 +142,4 @@ export const deleteFormFromDrive = async (token, fileId) => {
   const url = `https://www.googleapis.com/drive/v3/files/${fileId}`;
   await fetchDriveApi(url, { method: 'DELETE' }, token);
 };
+

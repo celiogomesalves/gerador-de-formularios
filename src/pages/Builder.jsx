@@ -2474,8 +2474,9 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
                     style={{ flex: 1, fontFamily: 'monospace', fontSize: 13, background: 'var(--bg-card)', color: 'var(--text-primary)' }}
                   />
                   <button 
-                    className="btn btn-primary"
-                    style={{ padding: '0 20px', background: linkCopied ? '#10b981' : 'var(--accent-color)', borderColor: linkCopied ? '#10b981' : 'var(--accent-color)' }}
+                    className="btn btn-outline"
+                    title={linkCopied ? 'Copiado!' : 'Copiar Link'}
+                    style={{ padding: '8px 12px', width: 'auto', minWidth: 'auto', background: linkCopied ? '#10b981' : 'transparent', borderColor: linkCopied ? '#10b981' : 'var(--border-builder)', color: linkCopied ? '#fff' : 'var(--text-primary)', transition: 'all 0.2s ease' }}
                     onClick={() => {
                       navigator.clipboard.writeText(`${window.location.origin}/f/${formToken}`);
                       setLinkCopied(true);
@@ -2483,7 +2484,6 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
                     }}
                   >
                     {linkCopied ? <Check size={16} /> : <Copy size={16} />}
-                    {linkCopied ? 'Copiado!' : 'Copiar Link'}
                   </button>
                 </div>
               </div>
@@ -2522,8 +2522,9 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
                 <div style={{ position: 'relative' }}>
                   <button 
                     type="button" 
-                    className="btn btn-primary"
-                    style={{ position: 'absolute', top: 12, right: 12, width: 'auto', padding: '6px 12px', fontSize: 12, borderRadius: 6, opacity: 0.9 }}
+                    className="btn btn-outline"
+                    title={copied ? 'Copiado!' : 'Copiar iFrame'}
+                    style={{ position: 'absolute', top: 12, right: 12, width: 'auto', padding: '8px 12px', minWidth: 'auto', fontSize: 12, borderRadius: 6, background: copied ? '#10b981' : 'transparent', borderColor: copied ? '#10b981' : 'var(--border-builder)', color: copied ? '#fff' : 'var(--text-primary)', transition: 'all 0.2s ease' }}
                     onClick={() => {
                       const iframeSrc = `${window.location.origin}/f/${formToken}${settings.storageType === 'supabase' && settings.storageSupabaseUrl ? `?db=${encodeURIComponent(settings.storageSupabaseUrl)}&key=${encodeURIComponent(settings.storageSupabaseAnonKey)}` : ''}${embedHideHeader || embedTransparent ? (settings.storageType === 'supabase' && settings.storageSupabaseUrl ? '&' : '?') : ''}${embedHideHeader ? 'header=0' : ''}${embedHideHeader && embedTransparent ? '&' : ''}${embedTransparent ? 'bg=transparent' : ''}`;
                       const iframeCode = `<iframe src="${iframeSrc}" width="100%" height="600px" frameborder="0" style="border-radius: ${design.borderRadius}px; border: none; overflow: hidden;"></iframe>`;
@@ -2532,8 +2533,7 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
                       setTimeout(() => setCopied(false), 2000);
                     }}
                   >
-                    {copied ? <Check size={14} /> : <Copy size={14} />}
-                    {copied ? 'Copiado!' : 'Copiar iFrame'}
+                    {copied ? <Check size={16} /> : <Copy size={16} />}
                   </button>
                   <pre style={{ background: 'var(--bg-sidebar)', padding: '48px 16px 16px 16px', borderRadius: 8, fontSize: 13, fontFamily: 'monospace', overflowX: 'auto', border: '1px solid var(--border-builder)', color: 'var(--text-primary)', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
 {`<iframe 

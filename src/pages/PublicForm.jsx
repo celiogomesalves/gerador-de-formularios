@@ -491,7 +491,7 @@ export default function PublicForm() {
                 if (isMultistep && index !== currentStep) return null;
                 return (
                 <div key={field.id} className="public-form-group">
-                  <label className="public-form-label" style={{ color: config.design.mode === 'dark' ? '#cbd5e1' : '#374151' }}>
+                  <label className="public-form-label" style={{ color: config.design.headerTextColor ? config.design.headerTextColor : (config.design.mode === 'dark' ? '#cbd5e1' : '#374151') }}>
                     {field.label} {field.required && <span style={{ color: '#ef4444' }}>*</span>}
                   </label>
                   
@@ -522,7 +522,7 @@ export default function PublicForm() {
                       <label 
                         htmlFor={field.id}
                         className="public-form-checkbox-label"
-                        style={{ color: config.design.mode === 'dark' ? '#9ca3af' : '#64748b', cursor: 'pointer' }}
+                        style={{ color: config.design.headerTextColor ? config.design.headerTextColor : (config.design.mode === 'dark' ? '#9ca3af' : '#64748b'), cursor: 'pointer', opacity: config.design.headerTextColor ? 0.9 : 1 }}
                       >
                         {field.placeholder || 'Aceito os termos'}
                       </label>
@@ -560,7 +560,7 @@ export default function PublicForm() {
                           <label 
                             htmlFor={`${field.id}_${i}`}
                             className="public-form-radio-label"
-                            style={{ color: config.design.mode === 'dark' ? '#9ca3af' : '#64748b', cursor: 'pointer' }}
+                            style={{ color: config.design.headerTextColor ? config.design.headerTextColor : (config.design.mode === 'dark' ? '#9ca3af' : '#64748b'), cursor: 'pointer', opacity: config.design.headerTextColor ? 0.9 : 1 }}
                           >
                             {opt}
                           </label>
@@ -581,7 +581,7 @@ export default function PublicForm() {
                           <label 
                             htmlFor={`${field.id}_${i}`}
                             className="public-form-radio-label"
-                            style={{ color: config.design.mode === 'dark' ? '#9ca3af' : '#64748b', cursor: 'pointer' }}
+                            style={{ color: config.design.headerTextColor ? config.design.headerTextColor : (config.design.mode === 'dark' ? '#9ca3af' : '#64748b'), cursor: 'pointer', opacity: config.design.headerTextColor ? 0.9 : 1 }}
                           >
                             {opt}
                           </label>

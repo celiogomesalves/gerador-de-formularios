@@ -1575,7 +1575,7 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                     </div>
 
                     <div>
-                      <label className="input-label">Cor do Texto do Cabeçalho</label>
+                      <label className="input-label">Cor do Texto (Títulos e Campos)</label>
                       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                         <input 
                           type="color" 
@@ -2339,7 +2339,7 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
                 <form onSubmit={(e) => e.preventDefault()}>
                   {fields.map(field => (
                     <div key={field.id} className="public-form-group">
-                      <label className="public-form-label" style={{ color: design.mode === 'dark' ? '#cbd5e1' : '#374151' }}>
+                      <label className="public-form-label" style={{ color: design.headerTextColor ? design.headerTextColor : (design.mode === 'dark' ? '#cbd5e1' : '#374151') }}>
                         {field.label} {field.required && <span style={{ color: '#ef4444' }}>*</span>}
                       </label>
                       

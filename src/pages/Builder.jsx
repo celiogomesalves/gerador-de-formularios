@@ -110,7 +110,26 @@ export default function Builder({ session }) {
 
   const [isLoadingDrive, setIsLoadingDrive] = useState(true);
   const [driveFolderId, setDriveFolderId] = useState(localStorage.getItem('google_folder_id') || null);
-  const googleToken = session?.access_token;
+  const [googleToken, setGoogleToken] = useState(session?.access_token || localStorage.getItem('google_access_token'));
+  const [showSessionModal, setShowSessionModal] = useState(false);
+
+  const reconnectGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      const expiry = Date.now() + (tokenResponse.expires_in * 1000);
+      localStorage.setItem('google_access_token', tokenResponse.access_token);
+      localStorage.setItem('google_token_expiry', expiry.toString());
+      setGoogleToken(tokenResponse.access_token);
+      setShowSessionModal(false);
+      
+      // Auto-salvar após renovar
+      setTimeout(() => {
+        handleManualSave();
+      }, 500);
+    },
+    onError: (err) => alert('Falha ao reconectar Google: ' + (err.message || err)),
+    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+    prompt: 'consent'
+  });
   
   const [fields, setFields] = useState(() => {
     const stored = localStorage.getItem(`form_${formToken}`);

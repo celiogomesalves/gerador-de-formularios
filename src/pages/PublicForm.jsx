@@ -577,6 +577,22 @@ export default function PublicForm() {
                             id={`${field.id}_${i}`}
                             value={opt}
                             style={{ width: 16, height: 16, accentColor: config.design.themeColor }}
+                            onChange={(e) => {
+                              const isExclusive = (field.exclusiveOptions || []).includes(opt);
+                              const container = e.target.closest('div').parentElement;
+                              if (e.target.checked) {
+                                if (isExclusive) {
+                                  container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                                    if (cb !== e.target) cb.checked = false;
+                                  });
+                                } else {
+                                  const exclusiveOpts = field.exclusiveOptions || [];
+                                  container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                                    if (exclusiveOpts.includes(cb.value)) cb.checked = false;
+                                  });
+                                }
+                              }
+                            }}
                           />
                           <label 
                             htmlFor={`${field.id}_${i}`}

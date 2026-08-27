@@ -1101,7 +1101,7 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                                       setFields(fields.map(f => f.id === field.id ? { ...f, options: newOpts, exclusiveOptions: newExc } : f));
                                     }} 
                                   />
-                                  {field.type === 'checkbox' && (
+                                  {field.type === 'checkbox_group' && (
                                     <button
                                       type="button"
                                       className={`icon-btn ${(field.exclusiveOptions || []).includes(opt) ? 'active' : ''}`}
@@ -2471,7 +2471,7 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
                     readOnly 
                     value={`${window.location.origin}/f/${formToken}`} 
                     className="input-field" 
-                    style={{ flex: 1, fontFamily: 'monospace', fontSize: 13, background: 'var(--bg-card)' }}
+                    style={{ flex: 1, fontFamily: 'monospace', fontSize: 13, background: 'var(--bg-card)', color: 'var(--text-primary)' }}
                   />
                   <button 
                     className="btn btn-primary"

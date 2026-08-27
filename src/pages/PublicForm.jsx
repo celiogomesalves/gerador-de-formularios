@@ -157,13 +157,12 @@ export default function PublicForm() {
     const designObj = config.design;
     const styles = {
       minHeight: '100vh',
-      height: '100vh',
+      minHeight: '100dvh',
       width: '100%',
-      overflowY: 'auto',
       display: 'flex',
       alignItems: 'flex-start',
       justifyContent: 'center',
-      padding: transparentBgParam ? '10px' : '40px 20px',
+      padding: transparentBgParam ? '10px' : '32px 16px 80px 16px',
       boxSizing: 'border-box',
       transition: 'background 0.3s ease'
     };
@@ -208,10 +207,11 @@ export default function PublicForm() {
                  designObj.shadowSize === 'sm' ? '0 4px 6px -1px rgba(0, 0, 0, 0.05)' :
                  designObj.shadowSize === 'lg' ? '0 20px 25px -5px rgba(0, 0, 0, 0.2)' :
                  '0 10px 15px -3px rgba(0, 0, 0, 0.1)', // md
-      padding: '40px 32px',
+      padding: '40px 28px',
       width: '100%',
-      maxWidth: '520px',
-      margin: 'auto', // Centers the card within the flex-start wrapper when it's shorter than viewport
+      maxWidth: '540px',
+      margin: '0 auto',
+      marginBottom: '40px',
       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       border: '1px solid',
       boxSizing: 'border-box'
@@ -425,7 +425,7 @@ export default function PublicForm() {
         <style dangerouslySetInnerHTML={{ __html: config.design.customCss }} />
       )}
       <div className="public-form-container" style={getPageWrapperStyle()}>
-      <div style={getCardStyle()}>
+      <div className="public-form-card" style={getCardStyle()}>
         {success ? (
           <div style={{ textAlign: 'center', padding: '24px 8px' }}>
             <div style={{ fontSize: 64, marginBottom: 20, filter: 'drop-shadow(0 4px 12px rgba(16,185,129,0.3))' }}>✅</div>

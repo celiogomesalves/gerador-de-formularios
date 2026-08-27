@@ -23,7 +23,6 @@ export default function Home({ session, setSession }) {
         token: file.id,
         title: file.name.replace('.json', ''),
         date: new Date(file.createdTime).toLocaleDateString(),
-        // We can't know fieldsCount without downloading the whole file, so we'll hide it or show placeholder
         fieldsCount: '?'
       }));
       
@@ -42,8 +41,6 @@ export default function Home({ session, setSession }) {
   }, [token]);
 
   const createNewForm = () => {
-    // We navigate to a new special route, or just generate a local uuid 
-    // that won't match a drive ID, indicating it's "new"
     const newToken = `new_${uuidv4()}`;
     navigate(`/builder/${newToken}`);
   };
@@ -61,14 +58,12 @@ export default function Home({ session, setSession }) {
 
   const duplicateForm = async (fileId) => {
     try {
-      // Download the original form
       const data = await getFormFromDrive(token, fileId);
       
       if (data.design && data.design.titleText) {
         data.design.titleText = `${data.design.titleText} (Cópia)`;
       }
       
-      // Save as a new file in Drive
       await saveFormToDrive(token, folderId, data.design.titleText, data, null);
       
       loadFormsFromDrive();
@@ -84,15 +79,15 @@ export default function Home({ session, setSession }) {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }} className="dashboard-bg">
+    <div className="app-container">
       {/* Sidebar Nav */}
-      <aside className="sidebar" style={{ width: 280, padding: '24px 20px', borderRight: '1px solid rgba(0,0,0,0.05)', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', display: 'flex', flexDirection: 'column' }}>
-        <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 40, display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
+      <aside className="sidebar">
+        <h2>
           <Sparkles size={22} style={{ color: 'var(--accent-color)' }} /> FormGen Studio
         </h2>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <button className="tab-btn active" style={{ background: '#ffffff', color: 'var(--accent-color)', boxShadow: '0 4px 12px rgba(2, 132, 199, 0.1)', border: '1px solid rgba(2, 132, 199, 0.2)' }}>
+        <div className="tabs">
+          <button className="tab-btn active">
             <Layout size={18} /> Meus Formulários
           </button>
         </div>
@@ -105,39 +100,39 @@ export default function Home({ session, setSession }) {
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, overflowY: 'auto' }}>
+      <main className="main-content" style={{ flexDirection: 'column', overflowY: 'auto' }}>
         <div className="glass-header">
           <div>
-            <h1 style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-main)', marginBottom: 6, letterSpacing: '-0.02em' }}>Dashboard</h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: 15 }}>Gerencie seus formulários sincronizados com o Google Drive.</p>
+            <h1 className="gradient-text" style={{ fontSize: 32, fontWeight: 800, marginBottom: 6, letterSpacing: '-0.02em' }}>Dashboard</h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>Gerencie seus formulários sincronizados com o Google Drive.</p>
           </div>
-          <button className="btn btn-primary" style={{ width: 'auto', padding: '12px 24px', fontSize: 15, borderRadius: '12px', boxShadow: '0 8px 16px -4px rgba(2, 132, 199, 0.4)' }} onClick={createNewForm} disabled={loading}>
+          <button className="btn btn-primary" onClick={createNewForm} disabled={loading}>
             <Plus size={20} /> Criar Novo Formulário
           </button>
         </div>
 
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px 60px 48px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px 60px 48px', width: '100%' }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '100px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-              <div style={{ width: 40, height: 40, border: '3px solid rgba(2, 132, 199, 0.2)', borderTopColor: 'var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-              <div style={{ color: 'var(--text-muted)', fontSize: 15, fontWeight: 500 }}>Sincronizando com o Google Drive...</div>
+              <div style={{ width: 40, height: 40, border: '3px solid rgba(96, 165, 250, 0.2)', borderTopColor: 'var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <div style={{ color: 'var(--text-secondary)', fontSize: 15, fontWeight: 500 }}>Sincronizando com o Google Drive...</div>
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
           ) : forms.length === 0 ? (
-            <div className="dashboard-card" style={{ textAlign: 'center', padding: '80px 24px', alignItems: 'center', borderStyle: 'dashed', borderWidth: 2 }}>
-              <FileText size={64} style={{ color: '#cbd5e1', margin: '0 auto 20px' }} />
+            <div className="glass-panel animate-fade-up" style={{ textAlign: 'center', padding: '80px 24px', borderRadius: 'var(--radius-lg)', borderStyle: 'dashed', borderWidth: 1 }}>
+              <FileText size={64} style={{ color: 'var(--text-muted)', margin: '0 auto 20px' }} />
               <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Nenhum formulário criado</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: 15, marginBottom: 32, maxWidth: 400 }}>Você ainda não criou nenhum formulário. Comece agora mesmo e sincronize com seu Drive.</p>
-              <button className="btn btn-primary" onClick={createNewForm} style={{ width: 'auto', padding: '12px 32px', borderRadius: 12 }}>Criar Meu Primeiro Form</button>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 15, marginBottom: 32, maxWidth: 400, margin: '0 auto 32px' }}>Você ainda não criou nenhum formulário. Comece agora mesmo e sincronize com seu Drive.</p>
+              <button className="btn btn-primary" onClick={createNewForm} style={{ padding: '12px 32px' }}>Criar Meu Primeiro Form</button>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 32 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 24 }}>
               {forms.map((form, index) => (
-                <div key={form.token} className="dashboard-card" style={{ animationDelay: `${index * 0.08}s` }}>
+                <div key={form.token} className="glass-panel animate-fade-up" style={{ borderRadius: 'var(--radius-lg)', padding: 24, display: 'flex', flexDirection: 'column', animationDelay: `${index * 0.1}s` }}>
                   <div style={{ marginBottom: 'auto' }}>
-                    <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, color: 'var(--text-main)', lineHeight: 1.3 }}>{form.title}</h3>
-                    <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: 'var(--text-main)', letterSpacing: '-0.01em' }}>{form.title}</h3>
+                    <div style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', gap: 12, alignItems: 'center' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 999 }}>
                         <img src="https://www.google.com/drive/static/images/drive/logo-drive.png" height="14" alt="Drive" /> Google Drive
                       </span>
                       <span style={{ opacity: 0.3 }}>•</span>
@@ -145,17 +140,19 @@ export default function Home({ session, setSession }) {
                     </div>
                   </div>
                   
-                  <div style={{ display: 'flex', gap: 12, marginTop: 24, flexWrap: 'wrap' }}>
-                    <button className="btn btn-primary" style={{ flex: '1 1 calc(50% - 6px)', padding: '10px', fontSize: 14, borderRadius: 10 }} onClick={() => navigate(`/builder/${form.token}`)}>
+                  <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)', margin: '24px 0' }} />
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <button className="btn btn-primary" style={{ padding: '10px' }} onClick={() => navigate(`/builder/${form.token}`)}>
                       <Edit size={16} /> Editar
                     </button>
-                    <button className="btn btn-outline" style={{ flex: '1 1 calc(50% - 6px)', padding: '10px', fontSize: 14, borderRadius: 10, borderColor: 'rgba(0,0,0,0.1)' }} onClick={() => window.open(`/f/${form.token}`, '_blank')}>
+                    <button className="btn btn-outline" style={{ padding: '10px' }} onClick={() => window.open(`/f/${form.token}`, '_blank')}>
                       <ExternalLink size={16} /> Ver Ao Vivo
                     </button>
-                    <button className="btn btn-outline" style={{ flex: '1 1 calc(50% - 6px)', padding: '10px', fontSize: 14, borderRadius: 10, borderColor: 'rgba(0,0,0,0.1)' }} onClick={() => duplicateForm(form.token)}>
+                    <button className="btn btn-outline" style={{ padding: '10px' }} onClick={() => duplicateForm(form.token)}>
                       <Copy size={16} /> Duplicar
                     </button>
-                    <button className="btn btn-outline" style={{ flex: '1 1 calc(50% - 6px)', padding: '10px', fontSize: 14, borderRadius: 10, color: 'var(--danger-color)', borderColor: 'rgba(239, 68, 68, 0.2)', background: 'rgba(239, 68, 68, 0.05)' }} onClick={() => deleteForm(form.token)}>
+                    <button className="btn btn-outline" style={{ padding: '10px', color: 'var(--danger-color)', borderColor: 'rgba(239, 68, 68, 0.2)', background: 'rgba(239, 68, 68, 0.05)' }} onClick={() => deleteForm(form.token)}>
                       <Trash2 size={16} /> Excluir
                     </button>
                   </div>

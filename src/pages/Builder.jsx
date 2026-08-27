@@ -913,7 +913,7 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                           <div style={{ marginTop: 2, display: 'flex' }}>
                             {expandedFields[field.id] === true ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                             <span className="field-card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               {getFieldIcon(field.type)}
                               Campo #{index + 1} ({field.key})

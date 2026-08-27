@@ -1479,6 +1479,28 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                         </select>
                       </div>
                     </div>
+                    
+                    <div>
+                      <label className="input-label">Cor do Card do Formulário</label>
+                      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <input 
+                          type="color" 
+                          value={design.cardBgColor || (design.mode === 'dark' ? '#1e293b' : '#ffffff')} 
+                          onChange={(e) => setDesign({...design, cardBgColor: e.target.value})}
+                          style={{ width: 42, height: 42, border: 'none', borderRadius: 8, cursor: 'pointer', padding: 0 }}
+                        />
+                        <span style={{ fontSize: 13, fontFamily: 'monospace' }}>
+                          {design.cardBgColor || (design.mode === 'dark' ? '#1e293b' : '#ffffff')}
+                        </span>
+                        <button 
+                          className="btn btn-outline" 
+                          style={{ padding: '6px 12px', fontSize: 12, marginLeft: 'auto' }}
+                          onClick={() => { const newDesign = {...design}; delete newDesign.cardBgColor; setDesign(newDesign); }}
+                        >
+                          Padrão
+                        </button>
+                      </div>
+                    </div>
 
                     <div>
                       <label className="input-label">Cor de Destaque (Botão/Inputs)</label>

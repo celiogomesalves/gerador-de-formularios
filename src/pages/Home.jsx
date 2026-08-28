@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { Plus, Layout, FileText, LogOut, Sparkles, ExternalLink, Edit, Trash2, Copy } from 'lucide-react';
+import { Plus, Layout, FileText, LogOut, Sparkles, ExternalLink, Edit, Trash2, Copy, BookOpen } from 'lucide-react';
 import { getOrCreateFolder, listForms, deleteFormFromDrive, getFormFromDrive, saveFormToDrive } from '../lib/googleDrive';
 
 export default function Home({ session, setSession }) {

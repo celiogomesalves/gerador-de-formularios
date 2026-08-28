@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
+import Manual from './pages/Manual';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import './App.css';
 
@@ -47,6 +48,7 @@ function App() {
         <Route path="/f/:token" element={<PublicForm />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/manual" element={<Manual />} />
       </Routes>
     </GoogleOAuthProvider>
   );

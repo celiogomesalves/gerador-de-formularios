@@ -1,37 +1,66 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, BookOpen, FileText } from 'lucide-react';
 
 export default function TermsOfService() {
   return (
-    <div style={{ height: '100vh', overflowY: 'auto', backgroundColor: '#f4f5f8' }}>
-      <div style={{ padding: '40px', maxWidth: '800px', margin: '0 auto', fontFamily: 'sans-serif', lineHeight: '1.6', color: '#333' }}>
-        <h1 style={{ fontSize: '32px', marginBottom: '20px', color: '#0f172a' }}>Termos de Serviço</h1>
-      <p style={{ color: '#64748b' }}>Última atualização: {new Date().toLocaleDateString('pt-BR')}</p>
+    <div style={{ minHeight: '100vh', minHeight: '100dvh', backgroundColor: 'var(--bg-primary)', color: 'var(--text-main)', display: 'flex', flexDirection: 'column' }}>
       
-      <h2 style={{ marginTop: '32px', color: '#0f172a' }}>1. Aceitação dos Termos</h2>
-      <p>Ao acessar e usar o FormGen Studio, você concorda em cumprir e ficar vinculado aos seguintes termos e condições de uso. Se você não concordar com alguma parte destes termos, você não deve usar nosso serviço.</p>
-      
-      <h2 style={{ marginTop: '32px', color: '#0f172a' }}>2. Descrição do Serviço</h2>
-      <p>O FormGen Studio é uma plataforma baseada na web ("Serviço") que permite aos usuários projetar, criar e publicar formulários online. O Serviço opera sob uma arquitetura "Zero Database", utilizando a conta do Google Drive do próprio usuário para armazenamento de configurações de formulários (arquivos <code>.json</code>).</p>
-      
-      <h2 style={{ marginTop: '32px', color: '#0f172a' }}>3. Uso da Conta do Google e Permissões</h2>
-      <p>Para usar a funcionalidade principal do Serviço, você deve conectar sua conta do Google e conceder permissões para gerenciar arquivos no seu Google Drive (escopo <code>drive.file</code>). Você reconhece e concorda que:</p>
-      <ul>
-        <li>O Serviço criará arquivos no seu Google Drive para salvar seus formulários.</li>
-        <li>O Serviço definirá permissões públicas de leitura nesses arquivos específicos para que os formulários possam ser acessados por terceiros.</li>
-        <li>Você é o único proprietário dos dados salvos no seu Drive e é responsável pelo conteúdo dos formulários que criar.</li>
-      </ul>
-      
-      <h2 style={{ marginTop: '32px', color: '#0f172a' }}>4. Conduta do Usuário</h2>
-      <p>Você concorda em não utilizar o Serviço para criar formulários que coletem informações ilegais, solicitem senhas em texto puro, ou promovam spam, phishing ou qualquer outra atividade maliciosa. Reservamo-nos o direito de restringir o acesso à plataforma em caso de abuso.</p>
-      
-      <h2 style={{ marginTop: '32px', color: '#0f172a' }}>5. Isenção de Garantias e Limitação de Responsabilidade</h2>
-      <p>O Serviço é fornecido "no estado em que se encontra", sem qualquer garantia de qualquer tipo. Nós não nos responsabilizamos por perdas de dados no seu Google Drive, falhas na integração com webhooks de terceiros ou lucros cessantes. Sendo um aplicativo serverless, a disponibilidade pública dos seus formulários depende da disponibilidade da API do Google Drive.</p>
-      
-      <h2 style={{ marginTop: '32px', color: '#0f172a' }}>6. Modificações do Serviço e dos Termos</h2>
-      <p>Nós nos reservamos o direito de modificar ou descontinuar, temporária ou permanentemente, o Serviço (ou qualquer parte dele) com ou sem aviso prévio. Também podemos atualizar estes Termos de Serviço periodicamente.</p>
-      
-      <h2 style={{ marginTop: '32px', color: '#0f172a' }}>7. Contato</h2>
-      <p>Se você tiver dúvidas sobre estes Termos, entre em contato através das informações fornecidas no domínio principal da plataforma.</p>
+      {/* Header */}
+      <header className="glass-header" style={{ position: 'sticky', top: 0, zIndex: 50, marginBottom: 0, padding: '16px 32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <Link to="/" className="btn btn-outline" style={{ padding: '8px 14px', fontSize: 13, gap: 6, textDecoration: 'none' }}>
+            <ArrowLeft size={16} /> Voltar ao Início
+          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <FileText size={22} style={{ color: 'var(--accent-color)' }} />
+            <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Termos de Serviço</h1>
+          </div>
+        </div>
+        <Link to="/manual" className="btn btn-outline" style={{ padding: '8px 14px', fontSize: 13, gap: 6, textDecoration: 'none' }}>
+          <BookOpen size={16} /> Manual do Sistema
+        </Link>
+      </header>
+
+      {/* Content */}
+      <div style={{ maxWidth: 860, margin: '0 auto', width: '100%', padding: '40px 24px 80px 24px' }}>
+        <div className="glass-panel" style={{ padding: 40, borderRadius: 'var(--radius-lg)' }}>
+          <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8, color: 'var(--text-main)' }}>Termos de Serviço</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 32 }}>Última atualização: {new Date().toLocaleDateString('pt-BR')}</p>
+
+          <h2 style={{ fontSize: 18, fontWeight: 700, marginTop: 24, marginBottom: 12, color: 'var(--accent-color)' }}>1. Aceitação dos Termos</h2>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: 14 }}>
+            Ao acessar ou utilizar o <strong>FormGen Studio</strong>, você concorda em cumprir e vincular-se a estes Termos de Serviço. Caso não concorde com qualquer uma das disposições, pedimos que interrompa o uso do serviço.
+          </p>
+
+          <h2 style={{ fontSize: 18, fontWeight: 700, marginTop: 28, marginBottom: 12, color: 'var(--accent-color)' }}>2. Descrição e Modelo Operacional</h2>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: 14 }}>
+            O FormGen Studio é uma ferramenta de software baseada na web para criação, estilização, publicação e integração de formulários dinâmicos. A plataforma opera com integração direta ao Google Drive do usuário (arquitetura Zero Database), sem retenção de dados confidenciais ou respostas em servidores intermediários.
+          </p>
+
+          <h2 style={{ fontSize: 18, fontWeight: 700, marginTop: 28, marginBottom: 12, color: 'var(--accent-color)' }}>3. Responsabilidade pelo Conteúdo dos Formulários</h2>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: 14 }}>
+            O usuário é integral e exclusivamente responsável pelo teor das perguntas criadas, pelas informações solicitadas aos respondentes e pelo uso dos dados recebidos através de Webhooks ou integrações.
+          </p>
+          <ul style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.7, paddingLeft: 20, marginTop: 8 }}>
+            <li>É expressamente proibido usar a plataforma para atividades ilícitas, esquemas de phishing, coleta não autorizada de senhas bancárias ou spam.</li>
+          </ul>
+
+          <h2 style={{ fontSize: 18, fontWeight: 700, marginTop: 28, marginBottom: 12, color: 'var(--accent-color)' }}>4. Disponibilidade & Serviços de Terceiros</h2>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: 14 }}>
+            Por se tratar de uma solução serverless integrada ao Google Drive, o funcionamento e armazenamento das configurações dependem da disponibilidade dos servidores e das APIs da Google Inc. A plataforma emprega as melhores práticas para garantir alto desempenho, sem prestar garantias de infalibilidade de serviços externos.
+          </p>
+
+          <h2 style={{ fontSize: 18, fontWeight: 700, marginTop: 28, marginBottom: 12, color: 'var(--accent-color)' }}>5. Alterações dos Termos</h2>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: 14 }}>
+            Reservamo-nos o direito de aprimorar ou atualizar estes Termos periodicamente para refletir novas funcionalidades e melhorias de segurança.
+          </p>
+
+          <div style={{ marginTop: 40, paddingTop: 24, borderTop: '1px solid var(--border-builder)', display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+            <Link to="/privacy" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Consulte a Política de Privacidade</Link>
+            <Link to="/manual" style={{ color: 'var(--accent-color)', textDecoration: 'none' }}>Acessar Manual do Sistema →</Link>
+          </div>
+        </div>
       </div>
     </div>
   );

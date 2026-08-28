@@ -2,7 +2,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { 
-  Plus, Settings, Code, Trash2, Copy, Check, Palette, List, Link,
+  BookOpen, Plus, Settings, Code, Trash2, Copy, Check, Palette, List, Link,
   ChevronDown, ChevronUp, Monitor, Smartphone, Sparkles, Type, FileText, CheckSquare, Mail, Hash,
   Database, HelpCircle, ChevronRight, ChevronLeft, Terminal, AlertTriangle, Calendar, ArrowLeft, CircleDot
 } from 'lucide-react';
@@ -922,6 +922,10 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
         </div>
 
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <button className="btn btn-outline" onClick={() => window.open('/manual', '_blank')} title="Abrir Manual do Sistema">
+            <BookOpen size={16} />
+            Manual
+          </button>
           <button className="btn btn-outline" onClick={() => navigate('/')}>
             <ArrowLeft size={16} />
             Dashboard

@@ -1,6 +1,6 @@
 ﻿import { useState } from 'react';
 import { useGoogleLogin } from '@react-oauth/google';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Login({ setSession }) {
@@ -92,6 +92,27 @@ export default function Login({ setSession }) {
           <img src="https://www.google.com/favicon.ico" width={20} alt="Google" style={{ objectFit: 'contain', filter: termsAccepted ? 'none' : 'grayscale(100%) opacity(0.7)' }} />
           Continuar com Google
         </button>
+
+        <div style={{ marginTop: 24, textAlign: 'center' }}>
+          <Link 
+            to="/manual" 
+            style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: 8, 
+              color: 'var(--text-secondary)', 
+              fontSize: 13, 
+              textDecoration: 'none',
+              padding: '8px 18px',
+              borderRadius: 20,
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid var(--border-builder)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <BookOpen size={15} color="var(--accent-color)" /> Manual & Documentação do Sistema
+          </Link>
+        </div>
       </div>
     </div>
   );

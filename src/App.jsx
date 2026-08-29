@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Manual from './pages/Manual';
+import Admin from './pages/Admin';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import './App.css';
 
@@ -49,6 +50,7 @@ function App() {
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/manual" element={<Manual />} />
+        <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
       </Routes>
     </GoogleOAuthProvider>
   );

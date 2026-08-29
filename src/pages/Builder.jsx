@@ -333,7 +333,20 @@ export default function Builder({ session }) {
     
     setIsSavingManual(true);
     try {
-      const configData = { fields, design, settings };
+      let licenseInfo = null;
+      try {
+        const storedSub = localStorage.getItem('user_subscription');
+        if (storedSub) {
+          const sub = JSON.parse(storedSub);
+          licenseInfo = {
+            serialKey: sub.serial_key,
+            plan: sub.plan,
+            ownerEmail: sub.email
+          };
+        }
+      } catch (e) {}
+
+      const configData = { fields, design, settings, ...(licenseInfo ? { license: licenseInfo } : {}) };
       const isNew = formToken.startsWith('new_');
       let folderId = driveFolderId;
       

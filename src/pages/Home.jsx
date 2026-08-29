@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { Plus, Layout, FileText, LogOut, Sparkles, ExternalLink, Edit, Trash2, Copy, BookOpen } from 'lucide-react';
+import { Plus, Layout, FileText, LogOut, Sparkles, ExternalLink, Edit, Trash2, Copy, BookOpen, Crown } from 'lucide-react';
 import { getOrCreateFolder, listForms, deleteFormFromDrive, getFormFromDrive, saveFormToDrive } from '../lib/googleDrive';
 
 export default function Home({ session, setSession }) {
@@ -9,6 +9,8 @@ export default function Home({ session, setSession }) {
   const [loading, setLoading] = useState(true);
   const [folderId, setFolderId] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
+  const [subscription, setSubscription] = useState(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const navigate = useNavigate();
   const token = session.access_token;
 
@@ -48,12 +50,32 @@ export default function Home({ session, setSession }) {
         headers: { "Authorization": "Bearer " + token }
       })
       .then(r => r.json())
-      .then(d => setUserProfile(d))
+      .then(async d => {
+        setUserProfile(d);
+        if (d.email) {
+          localStorage.setItem('user_email', d.email);
+          try {
+            const subRes = await fetch(`/api/subscription?action=get_or_create&email=${encodeURIComponent(d.email)}&name=${encodeURIComponent(d.name || '')}`);
+            if (subRes.ok) {
+              const subData = await subRes.json();
+              setSubscription(subData);
+              localStorage.setItem('user_subscription', JSON.stringify(subData));
+            }
+          } catch (subErr) {
+            console.error('Erro ao verificar assinatura:', subErr);
+          }
+        }
+      })
       .catch(e => console.error(e));
     }
   }, [token]);
 
   const createNewForm = () => {
+    // Validação de cota do Plano Free (1 formulário ativo)
+    if (subscription && !subscription.isOwner && subscription.plan === 'free' && forms.length >= 1) {
+      setShowUpgradeModal(true);
+      return;
+    }
     const newToken = `new_${uuidv4()}`;
     navigate(`/builder/${newToken}`);
   };
@@ -70,6 +92,10 @@ export default function Home({ session, setSession }) {
   };
 
   const duplicateForm = async (fileId) => {
+    if (subscription && !subscription.isOwner && subscription.plan === 'free' && forms.length >= 1) {
+      setShowUpgradeModal(true);
+      return;
+    }
     try {
       const data = await getFormFromDrive(token, fileId);
       
@@ -118,6 +144,23 @@ export default function Home({ session, setSession }) {
               <div style={{ overflow: 'hidden' }}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{userProfile.name || 'Usuário'}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{userProfile.email}</div>
+                {subscription && (
+                  <div style={{ marginTop: 4 }}>
+                    {subscription.isOwner ? (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                        👑 DONO DO PROJETO
+                      </span>
+                    ) : subscription.plan === 'premium' ? (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                        💎 PREMIUM
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: 'rgba(255, 255, 255, 0.08)', color: 'var(--text-secondary)' }}>
+                        🆓 PLANO FREE (1 Form)
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -191,6 +234,77 @@ export default function Home({ session, setSession }) {
           
         </div>
       </main>
+
+      {/* Modal de Upgrade de Plano Asaas */}
+      {showUpgradeModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 20
+        }}>
+          <div className="glass-panel animate-fade-up" style={{
+            maxWidth: 480,
+            width: '100%',
+            padding: 36,
+            borderRadius: 20,
+            textAlign: 'center',
+            background: 'var(--bg-primary)',
+            border: '1px solid var(--border-builder)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.6)'
+          }}>
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <Crown size={32} />
+            </div>
+            <h3 style={{ fontSize: 22, fontWeight: 800, marginBottom: 12, color: 'var(--text-main)' }}>Limite do Plano Free Atingido</h3>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 24 }}>
+              O <strong>Plano Free</strong> permite criar e manter <strong>1 formulário ativo</strong> na sua conta. Para criar formulários ilimitados e desbloquear todos os recursos, faça o upgrade para o <strong>Plano Premium</strong>!
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {subscription?.asaasPaymentUrl ? (
+                <a 
+                  href={subscription.asaasPaymentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                  style={{
+                    padding: '14px',
+                    fontSize: 15,
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    borderColor: '#10b981',
+                    color: '#fff',
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8
+                  }}
+                >
+                  <Crown size={18} /> Assinar Plano Premium no Asaas <ExternalLink size={14} />
+                </a>
+              ) : (
+                <div style={{ padding: 12, borderRadius: 8, background: 'rgba(255,255,255,0.05)', fontSize: 13, color: 'var(--text-muted)' }}>
+                  O link de pagamento está sendo configurado pelo administrador. Entre em contato com o suporte para liberação imediata.
+                </div>
+              )}
+
+              <button 
+                className="btn btn-outline" 
+                onClick={() => setShowUpgradeModal(false)}
+                style={{ padding: '12px', fontSize: 14 }}
+              >
+                Continuar no Plano Free (Gerenciar Atual)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

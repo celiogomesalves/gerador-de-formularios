@@ -252,15 +252,6 @@ export default function Home({ session, setSession }) {
                 <Sparkles size={16} /> Fazer Upgrade (R$ 19,90)
               </button>
             )}
-            {(subscription?.isOwner || userProfile?.email?.toLowerCase() === 'celiogomesalves@gmail.com') && (
-              <button 
-                className="btn btn-outline" 
-                onClick={() => navigate('/admin')}
-                style={{ borderColor: 'rgba(245, 158, 11, 0.4)', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.08)', gap: 8 }}
-              >
-                <Crown size={18} /> Painel do Dono
-              </button>
-            )}
             <button className="btn btn-primary" onClick={createNewForm} disabled={loading}>
               <Plus size={20} /> Criar Novo Formulário
             </button>

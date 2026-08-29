@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Manual from './pages/Manual';
+import Pricing from './pages/Pricing';
 import Admin from './pages/Admin';
 import WhatsAppButton from './components/WhatsAppButton';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -51,6 +52,8 @@ function App() {
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/manual" element={<Manual />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/planos" element={<Pricing />} />
         <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
       </Routes>
         <WhatsAppButton />

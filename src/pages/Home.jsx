@@ -132,6 +132,15 @@ export default function Home({ session, setSession }) {
           <button className="tab-btn" onClick={() => navigate('/manual')}>
             <BookOpen size={18} /> Manual do Sistema
           </button>
+          {subscription && !subscription.isOwner && subscription.plan === 'free' && (
+            <button 
+              className="tab-btn" 
+              onClick={() => navigate('/pricing')}
+              style={{ color: '#f59e0b', background: 'rgba(245, 158, 11, 0.08)', borderColor: 'rgba(245, 158, 11, 0.25)' }}
+            >
+              <Crown size={18} /> Assinar Premium
+            </button>
+          )}
           {(subscription?.isOwner || userProfile?.email?.toLowerCase() === 'celiogomesalves@gmail.com') && (
             <button 
               className="tab-btn" 
@@ -144,6 +153,43 @@ export default function Home({ session, setSession }) {
         </div>
 
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Card de Upgrade Fixo para Usuários Free */}
+          {subscription && !subscription.isOwner && subscription.plan === 'free' && (
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.05))',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              borderRadius: 'var(--radius-md)',
+              padding: 14,
+              marginBottom: 4
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Crown size={16} color="#f59e0b" />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b' }}>Plano Free</span>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>{forms.length}/1 Form</span>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, margin: '0 0 10px 0' }}>
+                Desbloqueie formulários ilimitados por apenas R$ 19,90/mês.
+              </p>
+              <button 
+                onClick={() => navigate('/pricing')}
+                className="btn btn-primary"
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                  borderColor: '#f59e0b',
+                  color: '#fff'
+                }}
+              >
+                Fazer Upgrade →
+              </button>
+            </div>
+          )}
+
           {userProfile && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.05)' }}>
               {userProfile.picture ? (
@@ -190,6 +236,22 @@ export default function Home({ session, setSession }) {
             <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>Gerencie seus formulários sincronizados com o Google Drive.</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {subscription && !subscription.isOwner && subscription.plan === 'free' && (
+              <button 
+                className="btn btn-primary" 
+                onClick={() => navigate('/pricing')}
+                style={{ 
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)', 
+                  borderColor: '#f59e0b', 
+                  color: '#fff',
+                  fontWeight: 700,
+                  gap: 8,
+                  boxShadow: '0 4px 16px rgba(245, 158, 11, 0.3)'
+                }}
+              >
+                <Sparkles size={16} /> Fazer Upgrade (R$ 19,90)
+              </button>
+            )}
             {(subscription?.isOwner || userProfile?.email?.toLowerCase() === 'celiogomesalves@gmail.com') && (
               <button 
                 className="btn btn-outline" 
@@ -290,18 +352,39 @@ export default function Home({ session, setSession }) {
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {subscription?.asaasPaymentUrl ? (
+              <button 
+                onClick={() => {
+                  setShowUpgradeModal(false);
+                  navigate('/pricing');
+                }}
+                className="btn btn-primary"
+                style={{
+                  padding: '14px',
+                  fontSize: 15,
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                  borderColor: '#f59e0b',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8
+                }}
+              >
+                <Crown size={18} /> Conhecer o Plano Premium (R$ 19,90/mês) →
+              </button>
+
+              {subscription?.asaasPaymentUrl && (
                 <a 
                   href={subscription.asaasPaymentUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn btn-primary"
+                  className="btn btn-outline"
                   style={{
-                    padding: '14px',
-                    fontSize: 15,
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    borderColor: '#10b981',
-                    color: '#fff',
+                    padding: '12px',
+                    fontSize: 14,
+                    color: '#10b981',
+                    borderColor: 'rgba(16, 185, 129, 0.4)',
+                    background: 'rgba(16, 185, 129, 0.08)',
                     textDecoration: 'none',
                     display: 'flex',
                     alignItems: 'center',
@@ -309,12 +392,8 @@ export default function Home({ session, setSession }) {
                     gap: 8
                   }}
                 >
-                  <Crown size={18} /> Assinar Plano Premium no Asaas <ExternalLink size={14} />
+                  Ir Direto para Pagamento no Asaas <ExternalLink size={14} />
                 </a>
-              ) : (
-                <div style={{ padding: 12, borderRadius: 8, background: 'rgba(255,255,255,0.05)', fontSize: 13, color: 'var(--text-muted)' }}>
-                  O link de pagamento está sendo configurado pelo administrador. Entre em contato com o suporte para liberação imediata.
-                </div>
               )}
 
               <button 

@@ -78,22 +78,25 @@ export default async function handler(req, res) {
         user = Array.isArray(created) ? created[0] : newRecord;
       }
 
-      // Fetch config for Asaas payment link
+      // Fetch config for Asaas and WhatsApp
       const configRes = await supabaseRequest(`formgen_subscriptions?email=eq.__formgen_config__&limit=1`);
-      const asaasPaymentUrl = configRes && configRes.length > 0 ? configRes[0].asaas_customer_id : '';
+      const asaasPaymentUrl = configRes && configRes.length > 0 ? (configRes[0].asaas_customer_id || '') : '';
+      const whatsappSupportUrl = configRes && configRes.length > 0 && configRes[0].serial_key !== 'SYS-CONFIG-KEY' ? (configRes[0].serial_key || '') : '';
 
       return res.status(200).json({
         ...user,
         isOwner,
-        asaasPaymentUrl
+        asaasPaymentUrl,
+        whatsappSupportUrl
       });
     }
 
-    // 2. Get Public Config (Asaas URL)
+    // 2. Get Public Config (Asaas & WhatsApp URLs)
     if (action === 'get_config') {
       const configRes = await supabaseRequest(`formgen_subscriptions?email=eq.__formgen_config__&limit=1`);
-      const asaasPaymentUrl = configRes && configRes.length > 0 ? configRes[0].asaas_customer_id : '';
-      return res.status(200).json({ asaasPaymentUrl });
+      const asaasPaymentUrl = configRes && configRes.length > 0 ? (configRes[0].asaas_customer_id || '') : '';
+      const whatsappSupportUrl = configRes && configRes.length > 0 && configRes[0].serial_key !== 'SYS-CONFIG-KEY' ? (configRes[0].serial_key || '') : '';
+      return res.status(200).json({ asaasPaymentUrl, whatsappSupportUrl });
     }
 
     // 3. Save Config (Admin Only)
@@ -103,13 +106,17 @@ export default async function handler(req, res) {
         return res.status(403).json({ error: 'Acesso não autorizado' });
       }
 
-      const { asaasPaymentUrl } = req.body;
+      const { asaasPaymentUrl, whatsappSupportUrl } = req.body;
       const existing = await supabaseRequest(`formgen_subscriptions?email=eq.__formgen_config__&limit=1`);
+
+      const patchData = {};
+      if (asaasPaymentUrl !== undefined) patchData.asaas_customer_id = asaasPaymentUrl;
+      if (whatsappSupportUrl !== undefined) patchData.serial_key = whatsappSupportUrl;
 
       if (existing && existing.length > 0) {
         await supabaseRequest(`formgen_subscriptions?email=eq.__formgen_config__`, {
           method: 'PATCH',
-          body: JSON.stringify({ asaas_customer_id: asaasPaymentUrl })
+          body: JSON.stringify(patchData)
         });
       } else {
         await supabaseRequest('formgen_subscriptions', {
@@ -117,16 +124,16 @@ export default async function handler(req, res) {
           body: JSON.stringify({
             email: '__formgen_config__',
             name: 'System Config',
-            serial_key: 'SYS-CONFIG-KEY',
+            serial_key: whatsappSupportUrl || 'SYS-CONFIG-KEY',
             plan: 'system',
             status: 'active',
             forms_limit: 0,
-            asaas_customer_id: asaasPaymentUrl
+            asaas_customer_id: asaasPaymentUrl || ''
           })
         });
       }
 
-      return res.status(200).json({ success: true, asaasPaymentUrl });
+      return res.status(200).json({ success: true, asaasPaymentUrl, whatsappSupportUrl });
     }
 
     // 4. List all users (Admin Only)
@@ -140,11 +147,13 @@ export default async function handler(req, res) {
       const users = (allRecords || []).filter(u => u.email !== '__formgen_config__');
       
       const configRes = await supabaseRequest(`formgen_subscriptions?email=eq.__formgen_config__&limit=1`);
-      const asaasPaymentUrl = configRes && configRes.length > 0 ? configRes[0].asaas_customer_id : '';
+      const asaasPaymentUrl = configRes && configRes.length > 0 ? (configRes[0].asaas_customer_id || '') : '';
+      const whatsappSupportUrl = configRes && configRes.length > 0 && configRes[0].serial_key !== 'SYS-CONFIG-KEY' ? (configRes[0].serial_key || '') : '';
 
       return res.status(200).json({
         users,
         asaasPaymentUrl,
+        whatsappSupportUrl,
         totalUsers: users.length,
         premiumUsers: users.filter(u => u.plan === 'premium').length,
         freeUsers: users.filter(u => u.plan === 'free').length

@@ -8,6 +8,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Manual from './pages/Manual';
 import Admin from './pages/Admin';
+import WhatsAppButton from './components/WhatsAppButton';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import './App.css';
 
@@ -52,6 +53,7 @@ function App() {
         <Route path="/manual" element={<Manual />} />
         <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
       </Routes>
+        <WhatsAppButton />
     </GoogleOAuthProvider>
   );
 }

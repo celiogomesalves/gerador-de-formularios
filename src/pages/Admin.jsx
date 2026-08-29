@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
-  Crown, Users, Shield, CheckCircle2, AlertCircle, ArrowLeft, 
+  Crown, MessageCircle, Users, Shield, CheckCircle2, AlertCircle, ArrowLeft, 
   ExternalLink, Search, RefreshCw, Copy, Check, Sliders, Sparkles, 
   ToggleLeft, ToggleRight, DollarSign, Lock
 } from 'lucide-react';
@@ -19,6 +19,9 @@ export default function Admin({ session }) {
   const [asaasUrl, setAsaasUrl] = useState('');
   const [newAsaasUrl, setNewAsaasUrl] = useState('');
   const [savingUrl, setSavingUrl] = useState(false);
+  const [whatsappUrl, setWhatsappUrl] = useState('');
+  const [newWhatsappUrl, setNewWhatsappUrl] = useState('');
+  const [savingWhatsapp, setSavingWhatsapp] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
@@ -33,6 +36,8 @@ export default function Admin({ session }) {
       setUsers(data.users || []);
       setAsaasUrl(data.asaasPaymentUrl || '');
       setNewAsaasUrl(data.asaasPaymentUrl || '');
+      setWhatsappUrl(data.whatsappSupportUrl || '');
+      setNewWhatsappUrl(data.whatsappSupportUrl || '');
       setStats({
         total: data.totalUsers || 0,
         free: data.freeUsers || 0,
@@ -51,6 +56,28 @@ export default function Admin({ session }) {
       fetchAdminData();
     }
   }, [isOwner]);
+
+  const handleSaveWhatsappUrl = async (e) => {
+    e.preventDefault();
+    try {
+      setSavingWhatsapp(true);
+      const res = await fetch('/api/subscription?action=save_config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adminEmail: currentUserEmail,
+          whatsappSupportUrl: newWhatsappUrl.trim()
+        })
+      });
+      if (!res.ok) throw new Error('Falha ao salvar link do WhatsApp');
+      setWhatsappUrl(newWhatsappUrl.trim());
+      alert('Link de suporte via WhatsApp salvo com sucesso!');
+    } catch (err) {
+      alert('Erro ao salvar: ' + err.message);
+    } finally {
+      setSavingWhatsapp(false);
+    }
+  };
 
   const handleSaveAsaasUrl = async (e) => {
     e.preventDefault();
@@ -232,7 +259,18 @@ export default function Admin({ session }) {
             <div style={{ fontSize: 14, fontWeight: 600, color: asaasUrl ? '#10b981' : 'var(--danger-color)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {asaasUrl ? 'Configurado ✅' : 'Não Definido ⚠️'}
             </div>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Link de upgrade exibido aos usuários</span>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Link de upgrade aos usuários</span>
+          </div>
+
+          <div className="glass-panel" style={{ padding: 24, borderRadius: 'var(--radius-md)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 600 }}>Suporte WhatsApp</span>
+              <div style={{ padding: 8, borderRadius: 8, background: 'rgba(37, 211, 102, 0.15)', color: '#25D366' }}><MessageCircle size={20} /></div>
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: whatsappUrl ? '#25D366' : 'var(--danger-color)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {whatsappUrl ? 'Ativo ✅' : 'Não Definido ⚠️'}
+            </div>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Botão flutuante para clientes</span>
           </div>
         </div>
 
@@ -278,6 +316,61 @@ export default function Admin({ session }) {
               <span>Link atual ativo:</span>
               <a href={asaasUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-color)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 {asaasUrl} <ExternalLink size={12} />
+              </a>
+            </div>
+          )}
+        </div>
+
+
+        {/* WhatsApp Support Link Configuration */}
+        <div className="glass-panel" style={{ padding: 28, borderRadius: 'var(--radius-lg)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #25D366, #128C7E)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+              <MessageCircle size={18} />
+            </div>
+            <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Canal de Suporte via WhatsApp</h3>
+          </div>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 20 }}>
+            Informe o número de WhatsApp com DDD (ex: <code>5531982964066</code> ou <code>(31) 98296-4066</code>) ou o link direto <code>https://wa.me/...</code>. Este canal será aberto automaticamente quando o cliente clicar no botão flutuante de suporte na plataforma.
+          </p>
+
+          <form onSubmit={handleSaveWhatsappUrl} style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <input 
+              type="text" 
+              placeholder="Ex: 5531982964066 ou https://wa.me/5531982964066..."
+              value={newWhatsappUrl}
+              onChange={(e) => setNewWhatsappUrl(e.target.value)}
+              className="public-form-input"
+              style={{
+                flex: 1,
+                minWidth: 300,
+                background: 'rgba(0,0,0,0.3)',
+                borderColor: 'var(--border-builder)',
+                color: '#fff',
+                borderRadius: 'var(--radius-sm)'
+              }}
+              required
+            />
+            <button 
+              type="submit" 
+              className="btn btn-primary" 
+              disabled={savingWhatsapp}
+              style={{ padding: '12px 24px', fontSize: 14, background: '#25D366', borderColor: '#25D366', color: '#fff' }}
+            >
+              {savingWhatsapp ? 'Salvando...' : 'Salvar Link do WhatsApp'}
+            </button>
+          </form>
+
+          {whatsappUrl && (
+            <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)' }}>
+              <span>Canal atual configurado:</span>
+              <a 
+                href={whatsappUrl.startsWith('http') ? whatsappUrl : `https://wa.me/${whatsappUrl.replace(/\D/g, '')}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={{ color: '#25D366', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+              >
+                {whatsappUrl} <ExternalLink size={12} />
               </a>
             </div>
           )}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { Plus, Layout, FileText, LogOut, Sparkles, ExternalLink, Edit, Trash2, Copy, BookOpen, Crown } from 'lucide-react';
+import { Plus, Layout, FileText, LogOut, Sparkles, ExternalLink, Edit, Trash2, Copy, BookOpen, Crown, Lock } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useCustomDialog } from '../context/CustomDialogContext';
 import { getOrCreateFolder, listForms, deleteFormFromDrive, getFormFromDrive, saveFormToDrive } from '../lib/googleDrive';
@@ -17,6 +17,9 @@ export default function Home({ session, setSession }) {
   const { showAlert, showConfirm, showToast } = useCustomDialog();
   const navigate = useNavigate();
   const token = session?.access_token;
+
+  const isFreePlan = !subscription || (!subscription.isOwner && subscription.plan === 'free');
+  const isFreeLimitReached = isFreePlan && forms.length >= 1;
 
   const reconnectGoogle = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -116,7 +119,7 @@ export default function Home({ session, setSession }) {
 
   const createNewForm = () => {
     // Validação de cota do Plano Free (1 formulário ativo)
-    if (subscription && !subscription.isOwner && subscription.plan === 'free' && forms.length >= 1) {
+    if (isFreeLimitReached) {
       setShowUpgradeModal(true);
       return;
     }
@@ -149,7 +152,8 @@ export default function Home({ session, setSession }) {
   };
 
   const duplicateForm = async (fileId) => {
-    if (subscription && !subscription.isOwner && subscription.plan === 'free' && forms.length >= 1) {
+    // Bloqueio rigoroso de duplicar no Plano Free quando limite já foi atingido
+    if (isFreeLimitReached) {
       setShowUpgradeModal(true);
       return;
     }
@@ -357,8 +361,22 @@ export default function Home({ session, setSession }) {
                     <button className="btn btn-outline" style={{ padding: '10px' }} onClick={() => window.open(`/f/${form.token}?preview=true`, '_blank')}>
                       <ExternalLink size={16} /> Ver Ao Vivo
                     </button>
-                    <button className="btn btn-outline" style={{ padding: '10px' }} onClick={() => duplicateForm(form.token)}>
-                      <Copy size={16} /> Duplicar
+                    <button 
+                      className="btn btn-outline" 
+                      style={{ 
+                        padding: '10px',
+                        ...(isFreeLimitReached ? {
+                          borderColor: 'rgba(245, 158, 11, 0.35)',
+                          background: 'rgba(245, 158, 11, 0.08)',
+                          color: '#f59e0b',
+                          gap: 6
+                        } : {})
+                      }} 
+                      onClick={() => duplicateForm(form.token)}
+                      title={isFreeLimitReached ? "Limite do Plano Free atingido (1 formulário ativo). Faça upgrade para duplicar formulários." : "Duplicar Formulário"}
+                    >
+                      {isFreeLimitReached ? <Lock size={15} color="#f59e0b" /> : <Copy size={16} />}
+                      {isFreeLimitReached ? "Duplicar (Pro)" : "Duplicar"}
                     </button>
                     <button className="btn btn-outline" style={{ padding: '10px', color: 'var(--danger-color)', borderColor: 'rgba(239, 68, 68, 0.2)', background: 'rgba(239, 68, 68, 0.05)' }} onClick={() => deleteForm(form.token)}>
                       <Trash2 size={16} /> Excluir

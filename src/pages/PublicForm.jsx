@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import { AlertCircle, X } from 'lucide-react';
 
 export default function PublicForm() {
   const { token } = useParams();
@@ -47,6 +48,97 @@ export default function PublicForm() {
   const [submitting, setSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [success, setSuccess] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [systemToast, setSystemToast] = useState(null);
+  const toastTimeoutRef = useRef(null);
+
+  const showToast = (message, type = 'warning', title = '') => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setSystemToast({ message, type, title });
+    toastTimeoutRef.current = setTimeout(() => {
+      setSystemToast(null);
+    }, 4500);
+  };
+
+  const clearFieldError = (fieldId) => {
+    if (errors[fieldId]) {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next[fieldId];
+        return next;
+      });
+    }
+  };
+
+  const validateFields = (fieldsToValidate) => {
+    const form = document.getElementById('public-form');
+    if (!form) return true;
+
+    const newErrors = {};
+    let firstInvalidField = null;
+
+    for (const field of fieldsToValidate) {
+      if (!field.required) continue;
+
+      if (field.type === 'checkbox_group') {
+        const checkboxes = form.querySelectorAll(`input[name="${field.key}"]`);
+        const hasChecked = Array.from(checkboxes).some(cb => cb.checked);
+        if (!hasChecked) {
+          newErrors[field.id] = 'Selecione ao menos uma opção para continuar.';
+          if (!firstInvalidField) firstInvalidField = field;
+        }
+      } else if (field.type === 'checkbox') {
+        const cb = form.querySelector(`input[name="${field.key}"]`);
+        if (!cb || !cb.checked) {
+          newErrors[field.id] = 'Você precisa marcar esta opção para continuar.';
+          if (!firstInvalidField) firstInvalidField = field;
+        }
+      } else if (field.type === 'radio') {
+        const radios = form.querySelectorAll(`input[name="${field.key}"]`);
+        const hasChecked = Array.from(radios).some(r => r.checked);
+        if (!hasChecked) {
+          newErrors[field.id] = 'Por favor, selecione uma das opções acima.';
+          if (!firstInvalidField) firstInvalidField = field;
+        }
+      } else if (field.type === 'select') {
+        const select = form.querySelector(`select[name="${field.key}"]`);
+        if (!select || !select.value) {
+          newErrors[field.id] = 'Por favor, selecione uma opção na lista.';
+          if (!firstInvalidField) firstInvalidField = field;
+        }
+      } else if (field.type === 'email') {
+        const input = form.querySelector(`input[name="${field.key}"]`);
+        const val = input ? input.value.trim() : '';
+        if (!val) {
+          newErrors[field.id] = 'Por favor, preencha este campo obrigatório.';
+          if (!firstInvalidField) firstInvalidField = field;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+          newErrors[field.id] = 'Por favor, insira um e-mail válido.';
+          if (!firstInvalidField) firstInvalidField = field;
+        }
+      } else {
+        const input = form.querySelector(`[name="${field.key}"]`);
+        const val = input ? input.value.trim() : '';
+        if (!val) {
+          newErrors[field.id] = 'Por favor, preencha este campo obrigatório.';
+          if (!firstInvalidField) firstInvalidField = field;
+        }
+      }
+    }
+
+    setErrors(prev => ({ ...prev, ...newErrors }));
+
+    if (firstInvalidField) {
+      showToast('Por favor, preencha os campos obrigatórios assinalados.', 'warning', 'Atenção');
+      const el = document.getElementById(`group_${firstInvalidField.id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return false;
+    }
+
+    return true;
+  };
 
   // Parse embed query params
   const searchParams = new URLSearchParams(window.location.search);
@@ -267,24 +359,39 @@ export default function PublicForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validar se perguntas de múltipla escolha obrigatórias possuem ao menos uma opção marcada
+    // Validação exclusiva do sistema
     if (config && config.fields) {
-      for (const field of config.fields) {
-        if (field.type === 'checkbox_group' && field.required) {
-          const checkboxes = e.target.querySelectorAll(`input[name="${field.key}"]`);
-          const hasChecked = Array.from(checkboxes).some(cb => cb.checked);
-          if (!hasChecked && checkboxes.length > 0) {
-            if (isMultistep) {
-              const stepIdx = config.fields.findIndex(f => f.id === field.id);
-              if (stepIdx !== -1) setCurrentStep(stepIdx);
+      const isValid = validateFields(config.fields);
+      if (!isValid) {
+        if (isMultistep) {
+          const firstErrField = config.fields.find(f => {
+            const form = e.target;
+            if (!f.required) return false;
+            if (f.type === 'checkbox_group') {
+              const cbs = form.querySelectorAll(`input[name="${f.key}"]`);
+              return !Array.from(cbs).some(cb => cb.checked);
             }
-            setTimeout(() => {
-              checkboxes[0].setCustomValidity('Por favor, selecione pelo menos uma opção.');
-              checkboxes[0].reportValidity();
-            }, 50);
-            return;
+            if (f.type === 'checkbox') {
+              const cb = form.querySelector(`input[name="${f.key}"]`);
+              return !cb || !cb.checked;
+            }
+            if (f.type === 'radio') {
+              const rs = form.querySelectorAll(`input[name="${f.key}"]`);
+              return !Array.from(rs).some(r => r.checked);
+            }
+            if (f.type === 'select') {
+              const sel = form.querySelector(`select[name="${f.key}"]`);
+              return !sel || !sel.value;
+            }
+            const inp = form.querySelector(`[name="${f.key}"]`);
+            return !inp || !inp.value.trim();
+          });
+          if (firstErrField) {
+            const stepIdx = config.fields.findIndex(f => f.id === firstErrField.id);
+            if (stepIdx !== -1) setCurrentStep(stepIdx);
           }
         }
+        return;
       }
     }
 
@@ -420,7 +527,7 @@ export default function PublicForm() {
       e.target.reset();
     } catch (err) {
       console.error('Erro ao enviar dados do formulário público:', err);
-      alert('Houve um erro ao enviar o formulário. Por favor, tente novamente.\n\nDetalhes: ' + err.message);
+      showToast('Não foi possível enviar suas respostas: ' + (err.message || 'Tente novamente.'), 'error', 'Erro no Envio');
     } finally {
       setSubmitting(false);
     }
@@ -445,6 +552,84 @@ export default function PublicForm() {
 
   return (
     <>
+      <style>{`
+        @keyframes slideDownToast {
+          from { opacity: 0; transform: translate(-50%, -24px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        @keyframes fadeInError {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
+      {/* Toast exclusivo do sistema */}
+      {systemToast && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 99999,
+            width: '90%',
+            maxWidth: 420,
+            backgroundColor: config.design.mode === 'dark' ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: `1px solid ${systemToast.type === 'error' ? '#ef4444' : systemToast.type === 'warning' ? '#f59e0b' : '#10b981'}`,
+            borderRadius: `${Math.max(Number(config.design.borderRadius) || 8, 8)}px`,
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            animation: 'slideDownToast 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            color: config.design.mode === 'dark' ? '#f8fafc' : '#0f172a'
+          }}
+        >
+          <div style={{
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            backgroundColor: systemToast.type === 'error' ? 'rgba(239, 68, 68, 0.15)' : systemToast.type === 'warning' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+            color: systemToast.type === 'error' ? '#ef4444' : systemToast.type === 'warning' ? '#f59e0b' : '#10b981',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <AlertCircle size={18} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {systemToast.title && (
+              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>
+                {systemToast.title}
+              </div>
+            )}
+            <div style={{ fontSize: 12.5, opacity: 0.9, lineHeight: 1.4 }}>
+              {systemToast.message}
+            </div>
+          </div>
+          <button 
+            type="button"
+            onClick={() => setSystemToast(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: 4,
+              cursor: 'pointer',
+              color: 'inherit',
+              opacity: 0.5,
+              borderRadius: 4,
+              display: 'flex'
+            }}
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       {config.design.customCss && (
         <style dangerouslySetInnerHTML={{ __html: config.design.customCss }} />
       )}
@@ -523,13 +708,15 @@ export default function PublicForm() {
                 </div>
               </div>
             )}
-            <form onSubmit={handleSubmit} id="public-form">
+            <form onSubmit={handleSubmit} id="public-form" noValidate>
               {config.fields.map((field, index) => {
                 const isFieldActive = !isMultistep || index === currentStep;
+                const fieldError = errors[field.id];
                 return (
                 <div 
                   key={field.id} 
-                  className="public-form-group"
+                  id={`group_${field.id}`}
+                  className={`public-form-group ${fieldError ? 'has-error' : ''}`}
                   style={{ display: isFieldActive ? 'block' : 'none' }}
                 >
                   <label className="public-form-label" style={{ color: config.design.headerTextColor ? config.design.headerTextColor : (config.design.mode === 'dark' ? '#cbd5e1' : '#374151') }}>
@@ -539,14 +726,15 @@ export default function PublicForm() {
                   {field.type === 'textarea' ? (
                     <textarea 
                       name={field.key}
-                      required={field.required && isFieldActive}
                       placeholder={field.placeholder}
                       className="public-form-input"
                       rows="4"
+                      onChange={() => clearFieldError(field.id)}
                       style={{
                         backgroundColor: config.design.mode === 'dark' ? 'rgba(0, 0, 0, 0.25)' : '#ffffff',
                         color: config.design.mode === 'dark' ? '#f8fafc' : '#0f172a',
-                        borderColor: config.design.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0',
+                        borderColor: fieldError ? '#ef4444' : (config.design.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0'),
+                        boxShadow: fieldError ? '0 0 0 2px rgba(239, 68, 68, 0.2)' : undefined,
                         borderRadius: `${config.design.borderRadius}px`,
                         '--focus-ring-color': config.design.themeColor
                       }}
@@ -557,7 +745,7 @@ export default function PublicForm() {
                         type="checkbox" 
                         name={field.key} 
                         id={field.id}
-                        required={field.required && isFieldActive}
+                        onChange={() => clearFieldError(field.id)}
                         style={{ width: 16, height: 16, accentColor: config.design.themeColor }}
                       />
                       <label 
@@ -571,12 +759,13 @@ export default function PublicForm() {
                   ) : field.type === 'select' ? (
                     <select
                       name={field.key}
-                      required={field.required && isFieldActive}
                       className="public-form-input"
+                      onChange={() => clearFieldError(field.id)}
                       style={{
                         backgroundColor: config.design.mode === 'dark' ? 'rgba(0, 0, 0, 0.25)' : '#ffffff',
                         color: config.design.mode === 'dark' ? '#f8fafc' : '#0f172a',
-                        borderColor: config.design.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0',
+                        borderColor: fieldError ? '#ef4444' : (config.design.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0'),
+                        boxShadow: fieldError ? '0 0 0 2px rgba(239, 68, 68, 0.2)' : undefined,
                         borderRadius: `${config.design.borderRadius}px`,
                         '--focus-ring-color': config.design.themeColor
                       }}
@@ -595,7 +784,7 @@ export default function PublicForm() {
                             name={field.key} 
                             id={`${field.id}_${i}`}
                             value={opt}
-                            required={field.required && isFieldActive}
+                            onChange={() => clearFieldError(field.id)}
                             style={{ width: 16, height: 16, accentColor: config.design.themeColor }}
                           />
                           <label 
@@ -609,7 +798,18 @@ export default function PublicForm() {
                       ))}
                     </div>
                   ) : field.type === 'checkbox_group' ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      gap: 8, 
+                      marginTop: 4,
+                      ...(fieldError ? { 
+                        border: '1px solid rgba(239, 68, 68, 0.4)', 
+                        padding: '10px 12px', 
+                        borderRadius: 8, 
+                        background: 'rgba(239, 68, 68, 0.03)' 
+                      } : {})
+                    }}>
                       {(field.options || ['Opção 1']).map((opt, i) => {
                         const isExclusive = (field.exclusiveOptions || []).includes(opt);
                         return (
@@ -622,6 +822,7 @@ export default function PublicForm() {
                               defaultChecked={isExclusive}
                               style={{ width: 16, height: 16, accentColor: config.design.themeColor }}
                               onChange={(e) => {
+                                clearFieldError(field.id);
                                 const isExc = (field.exclusiveOptions || []).includes(opt);
                                 const container = e.target.closest('div').parentElement;
                                 if (e.target.checked) {
@@ -634,13 +835,6 @@ export default function PublicForm() {
                                     container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
                                       if (exclusiveOpts.includes(cb.value)) cb.checked = false;
                                     });
-                                  }
-                                }
-                                if (field.required) {
-                                  const allCbs = container.querySelectorAll('input[type="checkbox"]');
-                                  const anyChecked = Array.from(allCbs).some(cb => cb.checked);
-                                  if (allCbs.length > 0) {
-                                    allCbs[0].setCustomValidity(anyChecked ? '' : 'Por favor, selecione pelo menos uma opção.');
                                   }
                                 }
                               }}
@@ -660,18 +854,37 @@ export default function PublicForm() {
                     <input
                       type={field.type}
                       name={field.key}
-                      required={field.required && isFieldActive}
                       placeholder={field.placeholder}
                       className="public-form-input"
+                      onChange={() => clearFieldError(field.id)}
                       style={{
                         backgroundColor: config.design.mode === 'dark' ? 'rgba(0, 0, 0, 0.25)' : '#ffffff',
                         color: config.design.mode === 'dark' ? '#f8fafc' : '#0f172a',
-                        borderColor: config.design.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0',
+                        borderColor: fieldError ? '#ef4444' : (config.design.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0'),
+                        boxShadow: fieldError ? '0 0 0 2px rgba(239, 68, 68, 0.2)' : undefined,
                         borderRadius: `${config.design.borderRadius}px`,
                         colorScheme: config.design.mode === 'dark' ? 'dark' : 'light',
                         '--focus-ring-color': config.design.themeColor
                       }}
                     />
+                  )}
+
+                  {fieldError && (
+                    <div 
+                      style={{ 
+                        color: '#ef4444', 
+                        fontSize: 12, 
+                        fontWeight: 500, 
+                        marginTop: 6, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 5,
+                        animation: 'fadeInError 0.2s ease'
+                      }}
+                    >
+                      <AlertCircle size={13} style={{ flexShrink: 0 }} />
+                      <span>{fieldError}</span>
+                    </div>
                   )}
                 </div>
               );})}
@@ -699,22 +912,12 @@ export default function PublicForm() {
                       type="button" 
                       className="public-form-btn" 
                       onClick={() => {
-                        const form = document.getElementById('public-form');
                         const currentField = config.fields[currentStep];
-                        if (currentField && currentField.type === 'checkbox_group' && currentField.required) {
-                          const checkboxes = form.querySelectorAll(`input[name="${currentField.key}"]`);
-                          const hasChecked = Array.from(checkboxes).some(cb => cb.checked);
-                          if (!hasChecked && checkboxes.length > 0) {
-                            checkboxes[0].setCustomValidity('Por favor, selecione pelo menos uma opção.');
-                            checkboxes[0].reportValidity();
-                            return;
-                          } else if (checkboxes.length > 0) {
-                            checkboxes[0].setCustomValidity('');
-                          }
+                        if (currentField) {
+                          const isValid = validateFields([currentField]);
+                          if (!isValid) return;
                         }
-                        if (form.reportValidity()) {
-                          setCurrentStep(prev => prev + 1);
-                        }
+                        setCurrentStep(prev => prev + 1);
                       }} 
                       style={{ 
                         flex: 1, 
@@ -765,7 +968,7 @@ export default function PublicForm() {
           </>
         )}
       </div>
-    </div>
+      </div>
     </>
   );
 }

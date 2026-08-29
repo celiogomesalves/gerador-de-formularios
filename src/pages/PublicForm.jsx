@@ -266,6 +266,28 @@ export default function PublicForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validar se perguntas de múltipla escolha obrigatórias possuem ao menos uma opção marcada
+    if (config && config.fields) {
+      for (const field of config.fields) {
+        if (field.type === 'checkbox_group' && field.required) {
+          const checkboxes = e.target.querySelectorAll(`input[name="${field.key}"]`);
+          const hasChecked = Array.from(checkboxes).some(cb => cb.checked);
+          if (!hasChecked && checkboxes.length > 0) {
+            if (isMultistep) {
+              const stepIdx = config.fields.findIndex(f => f.id === field.id);
+              if (stepIdx !== -1) setCurrentStep(stepIdx);
+            }
+            setTimeout(() => {
+              checkboxes[0].setCustomValidity('Por favor, selecione pelo menos uma opção.');
+              checkboxes[0].reportValidity();
+            }, 50);
+            return;
+          }
+        }
+      }
+    }
+
     setSubmitting(true);
     
     const formData = new FormData(e.target);
@@ -600,9 +622,10 @@ export default function PublicForm() {
                               defaultChecked={isExclusive}
                               style={{ width: 16, height: 16, accentColor: config.design.themeColor }}
                               onChange={(e) => {
+                                const isExc = (field.exclusiveOptions || []).includes(opt);
                                 const container = e.target.closest('div').parentElement;
                                 if (e.target.checked) {
-                                  if (isExclusive) {
+                                  if (isExc) {
                                     container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
                                       if (cb !== e.target) cb.checked = false;
                                     });
@@ -611,6 +634,13 @@ export default function PublicForm() {
                                     container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
                                       if (exclusiveOpts.includes(cb.value)) cb.checked = false;
                                     });
+                                  }
+                                }
+                                if (field.required) {
+                                  const allCbs = container.querySelectorAll('input[type="checkbox"]');
+                                  const anyChecked = Array.from(allCbs).some(cb => cb.checked);
+                                  if (allCbs.length > 0) {
+                                    allCbs[0].setCustomValidity(anyChecked ? '' : 'Por favor, selecione pelo menos uma opção.');
                                   }
                                 }
                               }}
@@ -670,6 +700,18 @@ export default function PublicForm() {
                       className="public-form-btn" 
                       onClick={() => {
                         const form = document.getElementById('public-form');
+                        const currentField = config.fields[currentStep];
+                        if (currentField && currentField.type === 'checkbox_group' && currentField.required) {
+                          const checkboxes = form.querySelectorAll(`input[name="${currentField.key}"]`);
+                          const hasChecked = Array.from(checkboxes).some(cb => cb.checked);
+                          if (!hasChecked && checkboxes.length > 0) {
+                            checkboxes[0].setCustomValidity('Por favor, selecione pelo menos uma opção.');
+                            checkboxes[0].reportValidity();
+                            return;
+                          } else if (checkboxes.length > 0) {
+                            checkboxes[0].setCustomValidity('');
+                          }
+                        }
                         if (form.reportValidity()) {
                           setCurrentStep(prev => prev + 1);
                         }

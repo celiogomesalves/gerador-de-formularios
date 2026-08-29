@@ -40,6 +40,7 @@ export default function PrivacyPolicy() {
           <ul style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.7, paddingLeft: 20, marginTop: 8 }}>
             <li><strong>Acesso Estritamente Restrito:</strong> Nossa aplicação <strong>não tem permissão nem capacidade técnica</strong> para visualizar, ler ou modificar quaisquer outros arquivos do seu Google Drive pessoal que não tenham sido gerados pelo próprio FormGen Studio.</li>
             <li><strong>Propriedade dos Arquivos:</strong> Os arquivos dos formulários (<code>.json</code>) ficam salvos na sua própria pasta do Drive ("FormGen Agenc-ia"). Você mantém a propriedade total e irrestrita sobre eles.</li>
+            <li><strong>Ciclo de Vida da Sessão:</strong> Os tokens de acesso temporários são armazenados exclusivamente na memória e no LocalStorage do seu navegador. Quando expirados, a plataforma solicita autorização direta do Google, sem transmitir suas chaves de segurança para bancos de dados intermediários.</li>
           </ul>
 
           <h2 style={{ fontSize: 18, fontWeight: 700, marginTop: 28, marginBottom: 12, color: 'var(--accent-color)' }}>3. Não-Armazenamento de Dados de Submissão</h2>

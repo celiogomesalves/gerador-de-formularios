@@ -156,19 +156,37 @@ export default function Manual() {
             </p>
 
             <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-main)', marginTop: 24, marginBottom: 8 }}>
-              • Validade do Token do Google (1 hora) e Reconexão Não-Destrutiva
+              • Validade do Token do Google e Reconexão Automática Não-Destrutiva
             </h3>
             <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: 14 }}>
-              O Google impõe que tokens de acesso temporários do OAuth expirem após <strong>60 minutos</strong>. Se você estiver com o Construtor aberto por mais de 1 hora e tentar salvar, o sistema não desconecta você e nem perde o que você digitou:
+              O Google impõe que tokens temporários do OAuth expirem após <strong>60 minutos</strong>. O FormGen Studio gerencia essa renovação de forma inteligente e contínua em todo o sistema:
             </p>
-            <div style={{ padding: 16, borderRadius: 10, background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.25)', marginTop: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#f59e0b', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>
-                <AlertTriangle size={16} /> Renovação Inteligente
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginTop: 12 }}>
+              <div style={{ padding: 16, borderRadius: 10, background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--accent-color)', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>
+                  <Sparkles size={16} /> No Painel Principal (Dashboard)
+                </div>
+                <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
+                  Caso sua sessão expire enquanto você gerencia seus formulários, o sistema não desloga você de surpresa. Uma janela elegante de <strong>Reconexão Rápida</strong> é exibida, permitindo restaurar o acesso com 1 clique e recarregar seus formulários imediatamente.
+                </p>
               </div>
-              <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
-                Uma janela segura surgirá na tela oferecendo o botão <strong>"Reconectar e Salvar"</strong>. Com apenas um clique no pop-up do Google, a sua sessão é atualizada e as alterações pendentes são sincronizadas imediatamente no Drive.
-              </p>
+
+              <div style={{ padding: 16, borderRadius: 10, background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#f59e0b', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>
+                  <AlertTriangle size={16} /> No Construtor de Formulários
+                </div>
+                <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
+                  Se você estiver editando há mais de 1 hora, nenhuma alteração é perdida. Ao clicar em <strong>"Reconectar e Salvar"</strong>, a sessão é renovada e as novas alterações são gravadas instantaneamente no Drive.
+                </p>
+              </div>
             </div>
+
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-main)', marginTop: 24, marginBottom: 8 }}>
+              • Mensagens e Diálogos 100% Exclusivos do Sistema
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: 14 }}>
+              Eliminamos por completo as caixas de diálogo e balões cinzas nativos do navegador (<code>alert()</code>, <code>confirm()</code> e validações padrão de formulário). Toda interação, confirmação de exclusão ou aviso de campo obrigatório utiliza o <strong>Design System exclusivo do FormGen Studio</strong>, com estética moderna, animações suaves e ícones temáticos.
+            </p>
           </section>
 
           {/* Section 3: Fields & Exclusive Options */}
@@ -187,7 +205,7 @@ export default function Manual() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
               <div style={{ padding: 14, borderRadius: 8, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-builder)' }}>
                 <strong style={{ color: 'var(--text-main)', fontSize: 14 }}>Texto & E-mail</strong>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, margin: 0 }}>Entradas simples de linha única com validação de formato de e-mail.</p>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, margin: 0 }}>Entradas simples de linha única com validação visual de formato de e-mail.</p>
               </div>
 
               <div style={{ padding: 14, borderRadius: 8, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-builder)' }}>
@@ -207,7 +225,7 @@ export default function Manual() {
 
               <div style={{ padding: 14, borderRadius: 8, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-builder)' }}>
                 <strong style={{ color: 'var(--text-main)', fontSize: 14 }}>Múltipla Escolha (Checkboxes)</strong>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, margin: 0 }}>Permite marcar várias caixas simultâneas.</p>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, margin: 0 }}>Permite marcar várias caixas simultâneas com suporte a Opção Exclusiva.</p>
               </div>
 
               <div style={{ padding: 14, borderRadius: 8, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-builder)' }}>
@@ -219,12 +237,17 @@ export default function Manual() {
             {/* Recurso Exclusivo */}
             <div style={{ marginTop: 24, padding: 20, borderRadius: 12, background: 'rgba(96, 165, 250, 0.06)', border: '1px solid rgba(96, 165, 250, 0.2)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--accent-color)', fontWeight: 700, fontSize: 15, marginBottom: 8 }}>
-                <Sparkles size={18} /> Recurso Especial: Opção Exclusiva ("Nenhuma das anteriores")
+                <Sparkles size={18} /> Recurso Especial: Opção Exclusiva ✨ ("Nenhum / Não se aplica")
               </div>
-              <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
-                Em campos de <strong>Múltipla Escolha</strong>, você verá um ícone de estrela/brilho (<Sparkles size={13} style={{ display: 'inline', verticalAlign: 'middle' }} />) ao lado de cada opção criada.
-                Ao clicar nesse ícone (ele ficará amarelo/dourado), você define essa opção como <strong>Exclusiva</strong>. Quando o usuário responder e marcar "Nenhum", todas as demais opções do grupo serão automaticamente desmarcadas!
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7, margin: '0 0 10px 0' }}>
+                Em campos de <strong>Múltipla Escolha</strong>, você pode definir uma opção como <strong>Exclusiva</strong> clicando no ícone de estrela/brilho (<Sparkles size={13} style={{ display: 'inline', verticalAlign: 'middle', color: '#f59e0b' }} />).
               </p>
+              <ul style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0, paddingLeft: 18 }}>
+                <li><strong>Exclusividade Única:</strong> O sistema permite selecionar apenas 1 opção como exclusiva por grupo de múltipla escolha.</li>
+                <li><strong>Pré-seleção Automática (Padrão):</strong> A opção exclusiva já vem marcada por padrão no formulário público. Isso agiliza o preenchimento: o usuário que não tiver o que declarar simplesmente avança sem cliques extras.</li>
+                <li><strong>Desmarcação Inteligente:</strong> Ao marcar qualquer outra opção do grupo, a opção exclusiva é desmarcada automaticamente. Da mesma forma, marcar a exclusiva desmarca todas as outras.</li>
+                <li><strong>Validação de Obrigatoriedade:</strong> Se a pergunta for obrigatória, o sistema impede o envio ou o avanço de etapa caso o respondente desmarque todas as opções.</li>
+              </ul>
             </div>
           </section>
 

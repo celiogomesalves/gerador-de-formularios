@@ -35,7 +35,7 @@ export default function TermsOfService() {
 
           <h2 style={{ fontSize: 18, fontWeight: 700, marginTop: 28, marginBottom: 12, color: 'var(--accent-color)' }}>2. Descrição e Modelo Operacional</h2>
           <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: 14 }}>
-            O FormGen Studio é uma ferramenta de software baseada na web para criação, estilização, publicação e integração de formulários dinâmicos. A plataforma opera com integração direta ao Google Drive do usuário (arquitetura Zero Database), sem retenção de dados confidenciais ou respostas em servidores intermediários.
+            O FormGen Studio é uma ferramenta de software baseada na web para criação, estilização, publicação e integração de formulários dinâmicos. A plataforma opera com integração direta ao Google Drive do usuário (arquitetura Zero Database), sem retenção de dados confidenciais ou respostas em servidores intermediários. Para assegurar a integridade e continuidade da edição sem perda de dados, o serviço implementa mecanismos de renovação segura de autorização (OAuth) e validação de preenchimento em tempo real com design exclusivo.
           </p>
 
           <h2 style={{ fontSize: 18, fontWeight: 700, marginTop: 28, marginBottom: 12, color: 'var(--accent-color)' }}>3. Responsabilidade pelo Conteúdo dos Formulários</h2>

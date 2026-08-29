@@ -1107,7 +1107,7 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                         {(field.type === 'select' || field.type === 'radio' || field.type === 'checkbox_group') && (
                           <div style={{ padding: 12, background: 'rgba(0,0,0,0.03)', borderRadius: 6, border: '1px solid var(--border-builder)' }}>
                             <label className="input-label" style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              Opções de Escolha
+                              <span>Opções de Escolha {field.type === 'checkbox_group' && <span style={{ fontSize: 11, fontWeight: 'normal', color: 'var(--text-muted)' }}>(✨ permite 1 opção exclusiva)</span>}</span>
                               <button 
                                 type="button" 
                                 className="icon-btn" 
@@ -1134,7 +1134,7 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                                       newOpts[optIndex] = e.target.value;
                                       let newExc = field.exclusiveOptions || [];
                                       if (newExc.includes(oldVal)) {
-                                        newExc = newExc.map(v => v === oldVal ? e.target.value : v);
+                                        newExc = [e.target.value];
                                       }
                                       // Usando setFields diretamente para atualizar múltiplas propriedades
                                       setFields(fields.map(f => f.id === field.id ? { ...f, options: newOpts, exclusiveOptions: newExc } : f));
@@ -1144,11 +1144,20 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                                     <button
                                       type="button"
                                       className={`icon-btn ${(field.exclusiveOptions || []).includes(opt) ? 'active' : ''}`}
-                                      style={{ padding: 6, height: 'auto', color: (field.exclusiveOptions || []).includes(opt) ? '#fbbf24' : 'var(--text-muted)' }}
-                                      title="Tornar opção exclusiva (desmarca outras)"
+                                      style={{ 
+                                        padding: 6, 
+                                        height: 'auto', 
+                                        color: (field.exclusiveOptions || []).includes(opt) ? '#fbbf24' : 'var(--text-muted)',
+                                        borderColor: (field.exclusiveOptions || []).includes(opt) ? '#fbbf24' : undefined,
+                                        background: (field.exclusiveOptions || []).includes(opt) ? 'rgba(251, 191, 36, 0.12)' : undefined
+                                      }}
+                                      title={(field.exclusiveOptions || []).includes(opt) 
+                                        ? "Opção exclusiva ativa (clique para remover)" 
+                                        : "Tornar esta opção exclusiva (desmarca outras ao responder; permite apenas 1 exclusiva)"}
                                       onClick={() => {
                                         const exc = field.exclusiveOptions || [];
-                                        const newExc = exc.includes(opt) ? exc.filter(e => e !== opt) : [...exc, opt];
+                                        // Permite somente UMA opção exclusiva por campo
+                                        const newExc = exc.includes(opt) ? [] : [opt];
                                         updateField(field.id, 'exclusiveOptions', newExc);
                                       }}
                                     >
@@ -1161,8 +1170,14 @@ create policy "Allow anonymous inserts on submissions" on submissions for insert
                                     style={{ padding: 6, height: 'auto' }}
                                     title="Remover opção"
                                     onClick={() => {
+                                      const removedOpt = (field.options || [])[optIndex];
                                       const newOpts = (field.options || ['Opção 1']).filter((_, idx) => idx !== optIndex);
-                                      updateField(field.id, 'options', newOpts.length ? newOpts : ['Opção 1']);
+                                      const newExc = (field.exclusiveOptions || []).filter(e => e !== removedOpt);
+                                      setFields(fields.map(f => f.id === field.id ? { 
+                                        ...f, 
+                                        options: newOpts.length ? newOpts : ['Opção 1'],
+                                        exclusiveOptions: newExc 
+                                      } : f));
                                     }}
                                   >
                                     <Trash2 size={14} />
@@ -2441,16 +2456,37 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
                         </div>
                       ) : field.type === 'checkbox_group' ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-                          {(field.options || ['Opção 1']).map((opt, i) => (
-                            <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'not-allowed', color: design.mode === 'dark' ? '#cbd5e1' : '#475569', fontSize: '15px' }}>
-                              <input 
-                                type="checkbox" 
-                                disabled
-                                style={{ accentColor: design.themeColor, width: 16, height: 16, marginTop: 0 }}
-                              />
-                              {opt}
-                            </label>
-                          ))}
+                          {(field.options || ['Opção 1']).map((opt, i) => {
+                            const isExc = (field.exclusiveOptions || []).includes(opt);
+                            return (
+                              <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'not-allowed', color: design.mode === 'dark' ? '#cbd5e1' : '#475569', fontSize: '15px' }}>
+                                <input 
+                                  type="checkbox" 
+                                  disabled
+                                  style={{ accentColor: design.themeColor, width: 16, height: 16, marginTop: 0 }}
+                                />
+                                <span>{opt}</span>
+                                {isExc && (
+                                  <span 
+                                    style={{ 
+                                      fontSize: 11, 
+                                      color: '#f59e0b', 
+                                      fontWeight: 600, 
+                                      display: 'inline-flex', 
+                                      alignItems: 'center', 
+                                      gap: 3, 
+                                      background: 'rgba(245, 158, 11, 0.12)', 
+                                      padding: '2px 6px', 
+                                      borderRadius: 4 
+                                    }} 
+                                    title="Opção exclusiva (desmarca as outras ao ser marcada)"
+                                  >
+                                    <Sparkles size={11} /> Exclusiva
+                                  </span>
+                                )}
+                              </label>
+                            );
+                          })}
                         </div>
                       ) : (
                         <input

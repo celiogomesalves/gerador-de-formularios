@@ -81,7 +81,7 @@ export default function Home({ session, setSession }) {
   };
 
   const deleteForm = async (fileId) => {
-    if (window.confirm('Tem certeza que deseja excluir este formulÃ¡rio do seu Google Drive?')) {
+    if (window.confirm('Tem certeza que deseja excluir este formulário do seu Google Drive?')) {
       try {
         await deleteFormFromDrive(token, fileId);
         loadFormsFromDrive();
@@ -100,7 +100,7 @@ export default function Home({ session, setSession }) {
       const data = await getFormFromDrive(token, fileId);
       
       if (data.design && data.design.titleText) {
-        data.design.titleText = `${data.design.titleText} (CÃ³pia)`;
+        data.design.titleText = `${data.design.titleText} (Cópia)`;
       }
       
       await saveFormToDrive(token, folderId, data.design.titleText, data, null);
@@ -125,10 +125,22 @@ export default function Home({ session, setSession }) {
           <Sparkles size={22} style={{ color: 'var(--accent-color)' }} /> FormGen Studio
         </h2>
         
-        <div className="tabs">
+                <div className="tabs">
           <button className="tab-btn active">
-            <Layout size={18} /> Meus FormulÃ¡rios
+            <Layout size={18} /> Meus Formulários
           </button>
+          <button className="tab-btn" onClick={() => navigate('/manual')}>
+            <BookOpen size={18} /> Manual do Sistema
+          </button>
+          {(subscription?.isOwner || userProfile?.email?.toLowerCase() === 'celiogomesalves@gmail.com') && (
+            <button 
+              className="tab-btn" 
+              onClick={() => navigate('/admin')}
+              style={{ color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.4)', marginTop: 8 }}
+            >
+              <Crown size={18} /> Painel do Dono
+            </button>
+          )}
         </div>
 
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -175,11 +187,22 @@ export default function Home({ session, setSession }) {
         <div className="glass-header">
           <div>
             <h1 className="gradient-text" style={{ fontSize: 32, fontWeight: 800, marginBottom: 6, letterSpacing: '-0.02em' }}>Dashboard</h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>Gerencie seus formulÃ¡rios sincronizados com o Google Drive.</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>Gerencie seus formulários sincronizados com o Google Drive.</p>
           </div>
-          <button className="btn btn-primary" onClick={createNewForm} disabled={loading}>
-            <Plus size={20} /> Criar Novo FormulÃ¡rio
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {(subscription?.isOwner || userProfile?.email?.toLowerCase() === 'celiogomesalves@gmail.com') && (
+              <button 
+                className="btn btn-outline" 
+                onClick={() => navigate('/admin')}
+                style={{ borderColor: 'rgba(245, 158, 11, 0.4)', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.08)', gap: 8 }}
+              >
+                <Crown size={18} /> Painel do Dono
+              </button>
+            )}
+            <button className="btn btn-primary" onClick={createNewForm} disabled={loading}>
+              <Plus size={20} /> Criar Novo Formulário
+            </button>
+          </div>
         </div>
 
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px 60px 48px', width: '100%' }}>
@@ -192,8 +215,8 @@ export default function Home({ session, setSession }) {
           ) : forms.length === 0 ? (
             <div className="glass-panel animate-fade-up" style={{ textAlign: 'center', padding: '80px 24px', borderRadius: 'var(--radius-lg)', borderStyle: 'dashed', borderWidth: 1 }}>
               <FileText size={64} style={{ color: 'var(--text-muted)', margin: '0 auto 20px' }} />
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Nenhum formulÃ¡rio criado</h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: 15, marginBottom: 32, maxWidth: 400, margin: '0 auto 32px' }}>VocÃª ainda nÃ£o criou nenhum formulÃ¡rio. Comece agora mesmo e sincronize com seu Drive.</p>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Nenhum formulário criado</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 15, marginBottom: 32, maxWidth: 400, margin: '0 auto 32px' }}>Você ainda não criou nenhum formulário. Comece agora mesmo e sincronize com seu Drive.</p>
               <button className="btn btn-primary" onClick={createNewForm} style={{ padding: '12px 32px' }}>Criar Meu Primeiro Form</button>
             </div>
           ) : (
@@ -206,7 +229,7 @@ export default function Home({ session, setSession }) {
                       <span style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 999 }}>
                         <img src="https://www.google.com/drive/static/images/drive/logo-drive.png" height="14" alt="Drive" /> Google Drive
                       </span>
-                      <span style={{ opacity: 0.3 }}>â€¢</span>
+                      <span style={{ opacity: 0.3 }}>•</span>
                       <span>{form.date}</span>
                     </div>
                   </div>

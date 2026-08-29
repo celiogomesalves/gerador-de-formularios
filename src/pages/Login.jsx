@@ -49,7 +49,7 @@ export default function Login({ setSession }) {
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <Sparkles size={48} style={{ color: 'var(--accent-color)', marginBottom: 20, filter: 'drop-shadow(0 0 16px rgba(96, 165, 250, 0.5))' }} />
           <h1 className="gradient-text" style={{ fontSize: 32, fontWeight: 800, marginBottom: 12, letterSpacing: '-0.02em' }}>FormGen Studio</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>Crie formulÃ¡rios premium salvos diretamente no seu Drive.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>Crie formulários premium salvos diretamente no seu Drive.</p>
         </div>
 
         {error && (
@@ -67,7 +67,7 @@ export default function Login({ setSession }) {
             style={{ marginTop: 2, width: 18, height: 18, accentColor: 'var(--accent-color)', cursor: 'pointer' }}
           />
           <label htmlFor="terms" style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-            Eu concordo com os <Link to="/terms" style={{ color: 'var(--accent-color)', textDecoration: 'none', fontWeight: 500 }}>Termos de ServiÃ§o</Link> e a <Link to="/privacy" style={{ color: 'var(--accent-color)', textDecoration: 'none', fontWeight: 500 }}>PolÃ­tica de Privacidade</Link>.
+            Eu concordo com os <Link to="/terms" style={{ color: 'var(--accent-color)', textDecoration: 'none', fontWeight: 500 }}>Termos de Serviço</Link> e a <Link to="/privacy" style={{ color: 'var(--accent-color)', textDecoration: 'none', fontWeight: 500 }}>Política de Privacidade</Link>.
           </label>
         </div>
 

@@ -2463,6 +2463,7 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
                                 <input 
                                   type="checkbox" 
                                   disabled
+                                  checked={isExc}
                                   style={{ accentColor: design.themeColor, width: 16, height: 16, marginTop: 0 }}
                                 />
                                 <span>{opt}</span>
@@ -2479,9 +2480,9 @@ create policy "Allow anonymous inserts" on ${settings.supabaseTable || 'submissi
                                       padding: '2px 6px', 
                                       borderRadius: 4 
                                     }} 
-                                    title="Opção exclusiva (desmarca as outras ao ser marcada)"
+                                    title="Opção exclusiva padrão (já vem marcada no formulário)"
                                   >
-                                    <Sparkles size={11} /> Exclusiva
+                                    <Sparkles size={11} /> Exclusiva (Padrão)
                                   </span>
                                 )}
                               </label>

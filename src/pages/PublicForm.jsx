@@ -503,9 +503,13 @@ export default function PublicForm() {
             )}
             <form onSubmit={handleSubmit} id="public-form">
               {config.fields.map((field, index) => {
-                if (isMultistep && index !== currentStep) return null;
+                const isFieldActive = !isMultistep || index === currentStep;
                 return (
-                <div key={field.id} className="public-form-group">
+                <div 
+                  key={field.id} 
+                  className="public-form-group"
+                  style={{ display: isFieldActive ? 'block' : 'none' }}
+                >
                   <label className="public-form-label" style={{ color: config.design.headerTextColor ? config.design.headerTextColor : (config.design.mode === 'dark' ? '#cbd5e1' : '#374151') }}>
                     {field.label} {field.required && <span style={{ color: '#ef4444' }}>*</span>}
                   </label>
@@ -513,7 +517,7 @@ export default function PublicForm() {
                   {field.type === 'textarea' ? (
                     <textarea 
                       name={field.key}
-                      required={field.required}
+                      required={field.required && isFieldActive}
                       placeholder={field.placeholder}
                       className="public-form-input"
                       rows="4"
@@ -531,7 +535,7 @@ export default function PublicForm() {
                         type="checkbox" 
                         name={field.key} 
                         id={field.id}
-                        required={field.required}
+                        required={field.required && isFieldActive}
                         style={{ width: 16, height: 16, accentColor: config.design.themeColor }}
                       />
                       <label 
@@ -545,7 +549,7 @@ export default function PublicForm() {
                   ) : field.type === 'select' ? (
                     <select
                       name={field.key}
-                      required={field.required}
+                      required={field.required && isFieldActive}
                       className="public-form-input"
                       style={{
                         backgroundColor: config.design.mode === 'dark' ? 'rgba(0, 0, 0, 0.25)' : '#ffffff',
@@ -569,7 +573,7 @@ export default function PublicForm() {
                             name={field.key} 
                             id={`${field.id}_${i}`}
                             value={opt}
-                            required={field.required}
+                            required={field.required && isFieldActive}
                             style={{ width: 16, height: 16, accentColor: config.design.themeColor }}
                           />
                           <label 
@@ -584,46 +588,49 @@ export default function PublicForm() {
                     </div>
                   ) : field.type === 'checkbox_group' ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
-                      {(field.options || ['Opção 1']).map((opt, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <input 
-                            type="checkbox" 
-                            name={field.key} 
-                            id={`${field.id}_${i}`}
-                            value={opt}
-                            style={{ width: 16, height: 16, accentColor: config.design.themeColor }}
-                            onChange={(e) => {
-                              const isExclusive = (field.exclusiveOptions || []).includes(opt);
-                              const container = e.target.closest('div').parentElement;
-                              if (e.target.checked) {
-                                if (isExclusive) {
-                                  container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                                    if (cb !== e.target) cb.checked = false;
-                                  });
-                                } else {
-                                  const exclusiveOpts = field.exclusiveOptions || [];
-                                  container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                                    if (exclusiveOpts.includes(cb.value)) cb.checked = false;
-                                  });
+                      {(field.options || ['Opção 1']).map((opt, i) => {
+                        const isExclusive = (field.exclusiveOptions || []).includes(opt);
+                        return (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <input 
+                              type="checkbox" 
+                              name={field.key} 
+                              id={`${field.id}_${i}`}
+                              value={opt}
+                              defaultChecked={isExclusive}
+                              style={{ width: 16, height: 16, accentColor: config.design.themeColor }}
+                              onChange={(e) => {
+                                const container = e.target.closest('div').parentElement;
+                                if (e.target.checked) {
+                                  if (isExclusive) {
+                                    container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                                      if (cb !== e.target) cb.checked = false;
+                                    });
+                                  } else {
+                                    const exclusiveOpts = field.exclusiveOptions || [];
+                                    container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                                      if (exclusiveOpts.includes(cb.value)) cb.checked = false;
+                                    });
+                                  }
                                 }
-                              }
-                            }}
-                          />
-                          <label 
-                            htmlFor={`${field.id}_${i}`}
-                            className="public-form-radio-label"
-                            style={{ color: config.design.headerTextColor ? config.design.headerTextColor : (config.design.mode === 'dark' ? '#9ca3af' : '#64748b'), cursor: 'pointer', opacity: config.design.headerTextColor ? 0.9 : 1 }}
-                          >
-                            {opt}
-                          </label>
-                        </div>
-                      ))}
+                              }}
+                            />
+                            <label 
+                              htmlFor={`${field.id}_${i}`}
+                              className="public-form-radio-label"
+                              style={{ color: config.design.headerTextColor ? config.design.headerTextColor : (config.design.mode === 'dark' ? '#9ca3af' : '#64748b'), cursor: 'pointer', opacity: config.design.headerTextColor ? 0.9 : 1 }}
+                            >
+                              {opt}
+                            </label>
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <input
                       type={field.type}
                       name={field.key}
-                      required={field.required}
+                      required={field.required && isFieldActive}
                       placeholder={field.placeholder}
                       className="public-form-input"
                       style={{

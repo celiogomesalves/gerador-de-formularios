@@ -1,7 +1,9 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { Plus, Layout, FileText, LogOut, Sparkles, ExternalLink, Edit, Trash2, Copy, BookOpen, Crown } from 'lucide-react';
+import { useGoogleLogin } from '@react-oauth/google';
+import { useCustomDialog } from '../context/CustomDialogContext';
 import { getOrCreateFolder, listForms, deleteFormFromDrive, getFormFromDrive, saveFormToDrive } from '../lib/googleDrive';
 
 export default function Home({ session, setSession }) {
@@ -11,16 +13,55 @@ export default function Home({ session, setSession }) {
   const [userProfile, setUserProfile] = useState(null);
   const [subscription, setSubscription] = useState(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showReconnectModal, setShowReconnectModal] = useState(false);
+  const { showAlert, showConfirm, showToast } = useCustomDialog();
   const navigate = useNavigate();
-  const token = session.access_token;
+  const token = session?.access_token;
 
-  const loadFormsFromDrive = async () => {
+  const reconnectGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      const hasDriveAccess = tokenResponse.scope && tokenResponse.scope.includes('drive.file');
+      if (!hasDriveAccess) {
+        showAlert({
+          title: 'Permissão Necessária',
+          message: 'Você precisa marcar a caixa permitindo o acesso ao Google Drive para podermos carregar e gerenciar seus formulários.',
+          type: 'warning'
+        });
+        return;
+      }
+      const expiry = Date.now() + (tokenResponse.expires_in * 1000);
+      localStorage.setItem('google_access_token', tokenResponse.access_token);
+      localStorage.setItem('google_token_expiry', expiry.toString());
+      setSession(prev => ({ ...(prev || {}), access_token: tokenResponse.access_token, isExpired: false }));
+      setShowReconnectModal(false);
+      showToast({ message: 'Conta Google reconectada com sucesso!', type: 'success' });
+      loadFormsFromDrive(tokenResponse.access_token);
+    },
+    onError: (err) => {
+      showAlert({
+        title: 'Falha ao Reconectar',
+        message: 'Não foi possível reconectar com a conta Google: ' + (err.message || err),
+        type: 'error'
+      });
+    },
+    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+    prompt: 'consent'
+  });
+
+  const loadFormsFromDrive = async (activeToken = null) => {
+    const currentToken = activeToken || token;
+    if (!currentToken || session?.isExpired) {
+      setShowReconnectModal(true);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const fId = await getOrCreateFolder(token);
+      const fId = await getOrCreateFolder(currentToken);
       setFolderId(fId);
       
-      const driveFiles = await listForms(token, fId);
+      const driveFiles = await listForms(currentToken, fId);
       
       const formattedForms = driveFiles.map(file => ({
         token: file.id,
@@ -32,11 +73,14 @@ export default function Home({ session, setSession }) {
       setForms(formattedForms);
     } catch (e) {
       console.error('Error loading forms from Drive', e);
-      if (e.message.includes('403') || e.message.includes('401')) {
-         alert('Permissões insuficientes ou token expirado. Por favor, faça login novamente e marque a caixa permitindo o acesso ao Drive.');
-         handleLogout();
+      if (e.message.includes('403') || e.message.includes('401') || e.message.toLowerCase().includes('token')) {
+         setShowReconnectModal(true);
       } else {
-         alert('Falha temporária ao sincronizar com o Google Drive. Recarregue a página.');
+         showToast({
+           title: 'Sincronização',
+           message: 'Falha temporária ao sincronizar com o Google Drive. Recarregue a página.',
+           type: 'warning'
+         });
       }
     } finally {
       setLoading(false);
@@ -45,7 +89,7 @@ export default function Home({ session, setSession }) {
 
   useEffect(() => {
     loadFormsFromDrive();
-    if (token) {
+    if (token && !session?.isExpired) {
       fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
         headers: { "Authorization": "Bearer " + token }
       })
@@ -81,12 +125,25 @@ export default function Home({ session, setSession }) {
   };
 
   const deleteForm = async (fileId) => {
-    if (window.confirm('Tem certeza que deseja excluir este formulário do seu Google Drive?')) {
+    const confirmed = await showConfirm({
+      title: 'Excluir Formulário',
+      message: 'Tem certeza que deseja excluir permanentemente este formulário do seu Google Drive?',
+      confirmText: 'Sim, Excluir',
+      cancelText: 'Cancelar',
+      type: 'danger'
+    });
+
+    if (confirmed) {
       try {
         await deleteFormFromDrive(token, fileId);
+        showToast({ message: 'Formulário excluído com sucesso!', type: 'success' });
         loadFormsFromDrive();
       } catch (e) {
-        alert('Erro ao excluir: ' + e.message);
+        if (e.message.includes('401') || e.message.includes('403')) {
+          setShowReconnectModal(true);
+        } else {
+          showAlert({ title: 'Erro ao excluir', message: e.message, type: 'error' });
+        }
       }
     }
   };
@@ -104,10 +161,14 @@ export default function Home({ session, setSession }) {
       }
       
       await saveFormToDrive(token, folderId, data.design.titleText, data, null);
-      
+      showToast({ message: 'Formulário duplicado com sucesso!', type: 'success' });
       loadFormsFromDrive();
     } catch (e) {
-      alert('Erro ao duplicar: ' + e.message);
+      if (e.message.includes('401') || e.message.includes('403')) {
+        setShowReconnectModal(true);
+      } else {
+        showAlert({ title: 'Erro ao duplicar', message: e.message, type: 'error' });
+      }
     }
   };
 
@@ -393,6 +454,93 @@ export default function Home({ session, setSession }) {
                 style={{ padding: '12px', fontSize: 14 }}
               >
                 Continuar no Plano Free (Gerenciar Atual)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Reconexão Automática do Google */}
+      {showReconnectModal && (
+        <div 
+          style={{
+            position: 'fixed', 
+            inset: 0, 
+            backgroundColor: 'rgba(0, 0, 0, 0.75)', 
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            zIndex: 99999,
+            padding: 20
+          }}
+        >
+          <div 
+            className="animate-fade-up" 
+            style={{
+              background: 'var(--card-bg, #0f172a)',
+              color: 'var(--text-main, #f8fafc)',
+              borderRadius: 16,
+              padding: 32,
+              maxWidth: 460,
+              width: '100%',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+              textAlign: 'center'
+            }}
+          >
+            <div style={{
+              width: 56,
+              height: 56,
+              borderRadius: 16,
+              backgroundColor: 'rgba(59, 130, 246, 0.15)',
+              color: 'var(--accent-color, #3b82f6)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px auto'
+            }}>
+              <Sparkles size={28} />
+            </div>
+
+            <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>
+              Sessão Expirada
+            </h3>
+            
+            <p style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
+              Sua autorização de acesso ao Google Drive expirou. Clique no botão abaixo para reconectar rapidamente sua conta e continuar gerenciando seus formulários.
+            </p>
+
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button 
+                type="button"
+                className="btn btn-outline" 
+                onClick={handleLogout}
+                style={{ flex: 1, padding: '12px 16px', borderRadius: 10, fontSize: 14 }}
+              >
+                Sair
+              </button>
+              <button 
+                type="button"
+                className="btn btn-primary" 
+                onClick={() => reconnectGoogle()}
+                style={{ 
+                  flex: 2, 
+                  padding: '12px 20px', 
+                  borderRadius: 10, 
+                  fontSize: 14, 
+                  fontWeight: 600,
+                  background: 'var(--accent-color, #3b82f6)',
+                  borderColor: 'var(--accent-color, #3b82f6)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)'
+                }}
+              >
+                <Sparkles size={16} /> Reconectar Conta Google
               </button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useCustomDialog } from '../context/CustomDialogContext';
 import { 
   Crown, MessageCircle, Users, Shield, CheckCircle2, AlertCircle, ArrowLeft, 
   ExternalLink, Search, RefreshCw, Copy, Check, Sliders, Sparkles, 
@@ -10,6 +11,7 @@ const OWNER_EMAIL = 'celiogomesalves@gmail.com';
 
 export default function Admin({ session }) {
   const navigate = useNavigate();
+  const { showAlert, showConfirm, showToast } = useCustomDialog();
   const currentUserEmail = session?.user?.email || localStorage.getItem('user_email') || '';
   const isOwner = currentUserEmail.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
 
@@ -45,7 +47,7 @@ export default function Admin({ session }) {
       });
     } catch (err) {
       console.error(err);
-      alert('Erro ao carregar painel administrativo: ' + err.message);
+      showAlert({ title: 'Painel Administrativo', message: 'Erro ao carregar dados: ' + err.message, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -71,9 +73,9 @@ export default function Admin({ session }) {
       });
       if (!res.ok) throw new Error('Falha ao salvar link do WhatsApp');
       setWhatsappUrl(newWhatsappUrl.trim());
-      alert('Link de suporte via WhatsApp salvo com sucesso!');
+      showToast({ message: 'Link de suporte via WhatsApp salvo com sucesso!', type: 'success' });
     } catch (err) {
-      alert('Erro ao salvar: ' + err.message);
+      showAlert({ title: 'Erro ao Salvar', message: err.message, type: 'error' });
     } finally {
       setSavingWhatsapp(false);
     }
@@ -93,9 +95,9 @@ export default function Admin({ session }) {
       });
       if (!res.ok) throw new Error('Falha ao salvar link');
       setAsaasUrl(newAsaasUrl.trim());
-      alert('Link de pagamento do Asaas salvo com sucesso!');
+      showToast({ message: 'Link de pagamento do Asaas salvo com sucesso!', type: 'success' });
     } catch (err) {
-      alert('Erro ao salvar: ' + err.message);
+      showAlert({ title: 'Erro ao Salvar', message: err.message, type: 'error' });
     } finally {
       setSavingUrl(false);
     }
@@ -107,7 +109,14 @@ export default function Admin({ session }) {
       ? `Promover ${user.email} para o Plano PREMIUM (ilimitado)?`
       : `Mudar ${user.email} para o Plano FREE (limite de 1 formulário)?`;
     
-    if (!window.confirm(confirmMsg)) return;
+    const confirmed = await showConfirm({
+      title: 'Alteração de Plano',
+      message: confirmMsg,
+      confirmText: 'Sim, Alterar',
+      cancelText: 'Cancelar',
+      type: 'warning'
+    });
+    if (!confirmed) return;
 
     try {
       setActionLoading(user.email);
@@ -129,8 +138,9 @@ export default function Admin({ session }) {
         free: nextPlan === 'free' ? prev.free + 1 : prev.free - 1,
         premium: nextPlan === 'premium' ? prev.premium + 1 : prev.premium - 1
       }));
+      showToast({ message: `Plano de ${user.email} atualizado para ${nextPlan.toUpperCase()}!`, type: 'success' });
     } catch (err) {
-      alert('Erro ao atualizar: ' + err.message);
+      showAlert({ title: 'Erro ao Atualizar', message: err.message, type: 'error' });
     } finally {
       setActionLoading(null);
     }
@@ -151,8 +161,9 @@ export default function Admin({ session }) {
       });
       if (!res.ok) throw new Error('Falha ao alterar status');
       setUsers(prev => prev.map(u => u.email === user.email ? { ...u, status: nextStatus } : u));
+      showToast({ message: `Status de ${user.email} alterado para ${nextStatus}!`, type: 'info' });
     } catch (err) {
-      alert('Erro ao alterar status: ' + err.message);
+      showAlert({ title: 'Erro ao Alterar Status', message: err.message, type: 'error' });
     } finally {
       setActionLoading(null);
     }

@@ -1,6 +1,7 @@
 import { useGoogleLogin } from '@react-oauth/google';
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { useCustomDialog } from '../context/CustomDialogContext';
 import { 
   BookOpen, Plus, Settings, Code, Trash2, Copy, Check, Palette, List, Link,
   ChevronDown, ChevronUp, Monitor, Smartphone, Sparkles, Type, FileText, CheckSquare, Mail, Hash,
@@ -112,6 +113,7 @@ export default function Builder({ session }) {
   const [driveFolderId, setDriveFolderId] = useState(localStorage.getItem('google_folder_id') || null);
   const [googleToken, setGoogleToken] = useState(session?.access_token || localStorage.getItem('google_access_token'));
   const [showSessionModal, setShowSessionModal] = useState(false);
+  const { showAlert, showConfirm, showToast } = useCustomDialog();
 
   const reconnectGoogle = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -120,13 +122,18 @@ export default function Builder({ session }) {
       localStorage.setItem('google_token_expiry', expiry.toString());
       setGoogleToken(tokenResponse.access_token);
       setShowSessionModal(false);
+      showToast({ message: 'Conexão restabelecida com sucesso!', type: 'success' });
       
       // Auto-salvar após renovar
       setTimeout(() => {
         handleManualSave();
       }, 500);
     },
-    onError: (err) => alert('Falha ao reconectar Google: ' + (err.message || err)),
+    onError: (err) => showAlert({
+      title: 'Falha ao Reconectar',
+      message: 'Não foi possível reconectar com a conta Google: ' + (err.message || err),
+      type: 'error'
+    }),
     scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
     prompt: 'consent'
   });
@@ -283,7 +290,7 @@ export default function Builder({ session }) {
 
   const removeField = (id) => {
     if (fields.length <= 1) {
-      alert("O formulário deve conter pelo menos um campo!");
+      showToast({ message: "O formulário deve conter pelo menos um campo!", type: "warning" });
       return;
     }
     setFields(fields.filter(f => f.id !== id));
@@ -377,9 +384,17 @@ export default function Builder({ session }) {
       } else if (err.message.includes('404') || err.message.toLowerCase().includes('not found')) {
         localStorage.removeItem('google_folder_id');
         setDriveFolderId(null);
-        alert("Erro 404: A pasta base ou este arquivo não foi encontrado no Google Drive.\nO cache da pasta foi limpo. Por favor, clique em 'Salvar Alterações' novamente para recriar.");
+        showAlert({
+          title: 'Pasta Não Encontrada (404)',
+          message: "A pasta base ou este arquivo não foi encontrado no Google Drive.\nO cache da pasta foi limpo. Por favor, clique em 'Salvar Alterações' novamente para recriar.",
+          type: 'warning'
+        });
       } else {
-        alert("Erro ao salvar no Google Drive: " + err.message);
+        showAlert({
+          title: 'Erro ao Salvar',
+          message: "Não foi possível salvar no Google Drive: " + err.message,
+          type: 'error'
+        });
       }
     } finally {
       setIsSavingManual(false);
@@ -440,7 +455,11 @@ export default function Builder({ session }) {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 2000000) {
-        alert("O arquivo é muito grande! Escolha uma imagem de até 2MB.");
+        showToast({
+          title: 'Arquivo Muito Grande',
+          message: "O arquivo excede o limite. Escolha uma imagem de até 2MB.",
+          type: 'warning'
+        });
         return;
       }
       const reader = new FileReader();

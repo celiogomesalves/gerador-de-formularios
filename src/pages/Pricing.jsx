@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useCustomDialog } from '../context/CustomDialogContext';
 import { 
   Crown, CheckCircle2, ArrowLeft, Sparkles, ExternalLink, 
   HelpCircle, Zap, ShieldCheck, Database, Layout, Code, MessageCircle
@@ -7,6 +8,7 @@ import {
 
 export default function Pricing() {
   const navigate = useNavigate();
+  const { showAlert } = useCustomDialog();
   const [subscription, setSubscription] = useState(null);
   const [asaasUrl, setAsaasUrl] = useState('');
   const [loading, setLoading] = useState(true);
@@ -42,7 +44,11 @@ export default function Pricing() {
     if (asaasUrl) {
       window.open(asaasUrl, '_blank', 'noopener,noreferrer');
     } else {
-      alert('O link de pagamento do Asaas está sendo configurado pelo administrador. Fale com nosso suporte no WhatsApp para liberação imediata!');
+      showAlert({
+        title: 'Pagamento em Ativação',
+        message: 'O link de pagamento do Asaas está sendo configurado pelo administrador. Fale com nosso suporte no WhatsApp para liberação imediata!',
+        type: 'info'
+      });
     }
   };
 

@@ -11,6 +11,7 @@ import Pricing from './pages/Pricing';
 import Admin from './pages/Admin';
 import WhatsAppButton from './components/WhatsAppButton';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { CustomDialogProvider } from './context/CustomDialogContext';
 import './App.css';
 
 const CLIENT_ID = '599672910369-t21nh7tf2junorrn7p81orl1mjc8hefn.apps.googleusercontent.com';
@@ -24,16 +25,16 @@ function App() {
     const expiry = localStorage.getItem('google_token_expiry');
     const savedProfile = localStorage.getItem('google_user_profile');
     
+    let user = null;
+    try {
+      if (savedProfile) user = JSON.parse(savedProfile);
+    } catch (e) {}
+
     if (savedToken && expiry && Date.now() < parseInt(expiry)) {
-      let user = null;
-      try {
-        if (savedProfile) user = JSON.parse(savedProfile);
-      } catch (e) {}
       setSession({ access_token: savedToken, user });
-    } else {
-      localStorage.removeItem('google_access_token');
-      localStorage.removeItem('google_token_expiry');
-      localStorage.removeItem('google_user_profile');
+    } else if (savedProfile || savedToken) {
+      // Sessão pré-existente cujo token expirou: manter perfil para reconexão direta no app
+      setSession({ access_token: savedToken || '', user, isExpired: true });
     }
     setLoading(false);
   }, []);
@@ -44,19 +45,21 @@ function App() {
 
   return (
     <GoogleOAuthProvider clientId={CLIENT_ID}>
-      <Routes>
-        <Route path="/login" element={session ? <Navigate to="/" /> : <Login setSession={setSession} />} />
-        <Route path="/" element={session ? <Home session={session} setSession={setSession} /> : <Navigate to="/login" />} />
-        <Route path="/builder/:token" element={session ? <Builder session={session} /> : <Navigate to="/login" />} />
-        <Route path="/f/:token" element={<PublicForm />} />
-        <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/terms" element={<TermsOfService />} />
-        <Route path="/manual" element={<Manual />} />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route path="/planos" element={<Pricing />} />
-        <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
-      </Routes>
+      <CustomDialogProvider>
+        <Routes>
+          <Route path="/login" element={session ? <Navigate to="/" /> : <Login setSession={setSession} />} />
+          <Route path="/" element={session ? <Home session={session} setSession={setSession} /> : <Navigate to="/login" />} />
+          <Route path="/builder/:token" element={session ? <Builder session={session} /> : <Navigate to="/login" />} />
+          <Route path="/f/:token" element={<PublicForm />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/manual" element={<Manual />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/planos" element={<Pricing />} />
+          <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
+        </Routes>
         <WhatsAppButton />
+      </CustomDialogProvider>
     </GoogleOAuthProvider>
   );
 }

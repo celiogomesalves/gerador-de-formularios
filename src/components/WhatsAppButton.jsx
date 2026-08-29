@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useCustomDialog } from '../context/CustomDialogContext';
 
 export default function WhatsAppButton() {
   const location = useLocation();
+  const { showAlert } = useCustomDialog();
   const [whatsappUrl, setWhatsappUrl] = useState('');
   const [hovered, setHovered] = useState(false);
 
@@ -24,7 +26,11 @@ export default function WhatsAppButton() {
 
   const handleClick = () => {
     if (!whatsappUrl) {
-      alert('O canal de suporte via WhatsApp está sendo configurado pelo administrador. Em breve estará disponível!');
+      showAlert({
+        title: 'Suporte FormGen',
+        message: 'O canal de atendimento via WhatsApp está sendo sincronizado pelo administrador. Em breve estará 100% ativo!',
+        type: 'info'
+      });
       return;
     }
 
